@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Yaap", "Yaap\Yaap.csproj", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Demo", "Demo\Demo.csproj", "{C9C6B4F8-06CA-40BA-8715-25963EF749CA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Yaap.Tests", "Yaap.Tests\Yaap.Tests.csproj", "{A1096E69-2C97-48A1-B85E-4265B99F24B4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{C9C6B4F8-06CA-40BA-8715-25963EF749CA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C9C6B4F8-06CA-40BA-8715-25963EF749CA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C9C6B4F8-06CA-40BA-8715-25963EF749CA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1096E69-2C97-48A1-B85E-4265B99F24B4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1096E69-2C97-48A1-B85E-4265B99F24B4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1096E69-2C97-48A1-B85E-4265B99F24B4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1096E69-2C97-48A1-B85E-4265B99F24B4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

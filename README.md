@@ -1,3 +1,5 @@
+[![Build status](https://ci.appveyor.com/api/projects/status/o92rqmfl93rajety?svg=true)](https://ci.appveyor.com/project/damageboy/yaap)
+
 # yaap
 
 This is a straight up port of python venerable [tqdm](https://github.com/tqdm/tqdm) to .NET / CLR
