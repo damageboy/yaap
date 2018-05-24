@@ -16,7 +16,7 @@ namespace Demo
 
             switch (startDemo)
             {
-                case 1: break;
+                case 1: goto demo1;
                 case 2: goto demo2;
                 case 3: goto demo3;
                 case 4: goto demo4;

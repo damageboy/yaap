@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Text;
 using System.Text.Formatting;
 using System.Threading;
 using JetBrains.Annotations;
@@ -95,8 +96,7 @@ namespace Yaap
             else
             {
                 var lastPos = -1;
-                foreach (var p in _instances.Keys)
-                {
+                foreach (var p in _instances.Keys) {
                     if (p > lastPos + 1)
                         return yaap.Position = lastPos + 1;
                     lastPos = p;
@@ -149,28 +149,28 @@ namespace Yaap
             const string eraseEndLine = ESC + "K";
             //const string eraseStartLine = ESC + "1K";
             //const string eraseLine = ESC + "2K";
-            _buffer.Clear();
-            _buffer.Append('\r');
-            //_buffer.Append(eraseEndLine);
-#if DEBUG
-            var startCount = _buffer.Count;
-#endif
-            yaap.Repaint(_buffer);
-#if DEBUG
-            if (_buffer.Count - startCount >= Console.WindowWidth)
-            {
-                Console.WriteLine("----------------------------------------------");
-                _buffer.CopyTo(0, _chars, 0, _buffer.Count);
-                Console.Write(_chars, 0, _buffer.Count);
-                Console.WriteLine();
-                Console.WriteLine("----------------------------------------------");
-
-                throw new InvalidProgramException(
-                    $"Something got totally messed up during repaint ({_buffer.Count},{startCount},{Console.WindowWidth})");
-            }
-#endif
-            _buffer.CopyTo(0, _chars, 0, _buffer.Count);
             lock (_consoleLock) {
+                _buffer.Clear();
+                _buffer.Append('\r');
+                _buffer.Append(eraseEndLine);
+#if DEBUG
+                var startCount = _buffer.Count;
+#endif
+                yaap.Repaint(_buffer);
+#if DEBUG
+                if (_buffer.Count - startCount >= Console.WindowWidth)
+                {
+                    Console.WriteLine("----------------------------------------------");
+                    _buffer.CopyTo(0, _chars, 0, _buffer.Count);
+                    Console.Write(_chars, 0, _buffer.Count);
+                    Console.WriteLine();
+                    Console.WriteLine("----------------------------------------------");
+
+                    throw new InvalidProgramException(
+                        $"Something got totally messed up during repaint ({_buffer.Count},{startCount},{Console.WindowWidth})");
+                }
+#endif
+                _buffer.CopyTo(0, _chars, 0, _buffer.Count);
                 var oldLine = MoveTo(yaap);
                 Console.Write(_chars, 0, _buffer.Count);
                 Console.CursorTop = oldLine;
@@ -192,52 +192,94 @@ namespace Yaap
 
     }
 
+    /// <summary>
+    /// An enumeration representing the various visual styles of a Yaap progress bar component
+    /// </summary>
     [PublicAPI]
     public enum YaapBarStyle
     {
+        /// <summary>
+        /// A Yaap progress bar style that uses the unicode charchters:
+        /// '▏', '▎', '▍', '▌', '▋', '▊', '▉', '█'
+        /// </summary>
         BarHorizontal,
+        /// <summary>
+        /// A Yaap progress bar style that uses the unicode charchters:
+        /// '▁', '▂', '▃', '▄', '▅', '▆', '▇', '█'
+        /// </summary>
         BarVertical,
+        /// <summary>
+        /// A Yaap progress bar style that uses the unicode charchters:
+        /// '⣀', '⣄', '⣤', '⣦', '⣶', '⣷', '⣿'
+        /// </summary>
         DotsHorizontal,
+        /// <summary>
+        /// A Yaap progress bar style that uses the unicode charchters:
+        /// '⣀', '⣄', '⣆', '⣇', '⣧', '⣷', '⣿'
+        /// </summary>
         DotsVertical,
+        /// <summary>
+        /// A Yaap progress bar style that uses the unicode charchters:
+        /// '○', '◔', '◐', '◕', '⬤'
+        /// </summary>
         Clock,
+        /// <summary>
+        /// A Yaap progress bar style that uses the unicode charchters:
+        /// '□', '◱', '◧', '▣', '■'
+        /// </summary>
         Squares1,
+        /// <summary>
+        /// A Yaap progress bar style that uses the unicode charchters:
+        /// '□', '◱', '▨', '▩', '■'
+        /// </summary>
         Squares2,
+        /// <summary>
+        /// A Yaap progress bar style that uses the unicode charchters:
+        /// '□', '◱', '▥', '▦', '■'
+        /// </summary>
         Squares3,
+        /// <summary>
+        /// A Yaap progress bar style that uses the unicode charchters:
+        /// </summary>
         ShortSquares,
+        /// <summary>
+        /// A Yaap progress bar style that uses the unicode charchters:
+        /// </summary>
         LongMesh,
+        /// <summary>
+        /// A Yaap progress bar style that uses the unicode charchters:
+        /// </summary>
         ShortMesh,
+        /// <summary>
+        /// A Yaap progress bar style that uses the unicode charchters:
+        /// </summary>
         Parallelogram,
+        /// <summary>
+        /// A Yaap progress bar style that uses the unicode charchters:
+        /// </summary>
         Rectangles1,
+        /// <summary>
+        /// A Yaap progress bar style that uses the unicode charchters:
+        /// </summary>
         Rectangles2,
+        /// <summary>
+        /// A Yaap progress bar style that uses the unicode charchters:
+        /// </summary>
         Circles1,
+        /// <summary>
+        /// A Yaap progress bar style that uses the unicode charchters:
+        /// </summary>
         Circles2,
     }
 
-    public static class YaapConsole
-    {
-        [PublicAPI]
-        public static void Write(string s) => YaapRegistry.Write(s);
-
-        [PublicAPI]
-        public static void WriteLine(string s) => YaapRegistry.WriteLine(s);
-
-        [PublicAPI]
-        public static void WriteLine() => YaapRegistry.WriteLine();
-    }
-
+    /// <summary>
+    /// Represents a text mode progress bar control, that can visually provide user feedback as to the progress
+    /// a long-standing operation, including progress visualization, elapsed time, total time, rate and more
+    /// </summary>
     public class Yaap : IDisposable
     {
         static readonly char[][] BarStyles =
         {
-            //  ▏ ▎ ▍ ▌ ▋ ▊ ▉ █ xxx ▂ ▃ ▄ ▅ ▆ ▇ █ xxx ⣀ ⣄ ⣤ ⣦ ⣶ ⣷ ⣿ xxx ⣀ ⣄ ⣆ ⣇ ⣧ ⣷ ⣿ xxx ○ ◔ ◐ ◕ ⬤ xxx □ ◱ ◧ ▣ ■ xxx □ ◱ ▨ ▩ ■ xxx  □ ◱ ▥ ▦ ■ xxx
-//'⬜', '⬛' },
-//'░', '▒', '▓', '█' },
-//'░', '█' },
-//'▱', '▰' },
-//'▭', '◼' },
-//'▯', '▮' },
-//'◯', '⬤' },
-//'⚪','⚫' },
             new [] { '▏', '▎', '▍', '▌', '▋', '▊', '▉', '█'},
             new [] { '▁', '▂', '▃', '▄', '▅', '▆', '▇', '█'},
             new [] { '⣀', '⣄', '⣤', '⣦', '⣶', '⣷', '⣿' },
@@ -277,6 +319,8 @@ namespace Yaap
 
             if (Environment.OSVersion.Platform == PlatformID.Win32NT)
                 DoUnspeakableThingsOnWindows();
+            else
+                UnicodeNotWorky = !(Console.OutputEncoding is UTF8Encoding);
         }
 
         static readonly char[] ASCIIBarStyle = {'#'};
@@ -290,11 +334,26 @@ namespace Yaap
         readonly int _maxGlyphWidth;
         readonly long _repaintProgressIncrement;
 
-        protected readonly Stopwatch _sw;
+        internal readonly Stopwatch _sw;
         TimeSpan _totalTime;
         static readonly long _swTicksIn1Hour = Stopwatch.Frequency * 3600;
         long _lastRepaintTicks;
 
+        /// <summary>
+        /// Instantiated a new Yaap object and paints it on the screen
+        /// </summary>
+        /// <param name="total">The total number of elements of the wrapped <see cref="IEnumerable{T}"/> that will be enumerated</param>
+        /// <param name="initialProgress">The initial progress value</param>
+        /// <param name="description">A description of the enumeration object used by <see cref="Yaap"/></param>
+        /// <param name="width">The maximal width in charchters to be used by <see cref="Yaap"/></param>
+        /// <param name="useASCII">Force ASCII rendering, with no fancy unicode charchters</param>
+        /// <param name="style">The chosen <see cref="YaapBarStyle"/> for the progress bar, only used when <paramref name="useASCII"/> is false</param>
+        /// <param name="leave">Leave the <see cref="Yaap"/> on screen after it has been disposed</param>
+        /// <param name="verticalPosition">Optional pre-determined vertical position for the <see cref="Yaap"/> progress bar</param>
+        /// <param name="useMetricAbbreviations">Use metric abbreviations for various count objects on screen</param>
+        /// <param name="unitScale">Optional unit scale for the various count objects, only used when <paramref name="useMetricAbbreviations"/> is false</param>
+        /// <param name="unitName">Optional unit name for each iteration, defaults to "it" (short for iterations)</param>
+        /// <param name="smoothingFactor">A optional smoothing factor for calculating the rate with EMA (Exponential Moving Average), when set to 0, EMA is not used for rate/total time estimation</param>
         [PublicAPI]
         public Yaap(long total, long initialProgress = 0, string description = null, int? width = null,
                     bool useASCII = false, YaapBarStyle style = YaapBarStyle.BarHorizontal, bool leave = true,
@@ -330,11 +389,11 @@ namespace Yaap
             if (UseMetricAbbreviations) {
                 var (abbrevTotal, suffix) = GetMetricAbbreviation(total);
                 _progressFmt              = $"| {{0,3}}{{1}}/{abbrevTotal}{suffix}";
-                epilogueLen              = "| 123K/999K".Length;
+                epilogueLen               = "| 123K/999K".Length;
             } else {
                 var totalChars = CountDigits(Total);
-                _progressFmt = $"| {{0,{totalChars}}}/{total}";
-                epilogueLen = 2 + totalChars * 2 + 1;
+                _progressFmt   = $"| {{0,{totalChars}}}/{total}";
+                epilogueLen    = 2 + totalChars * 2 + 1;
             }
 
             //_timeFmt = $"[{{0}}<{{1}}, {{2}}{unitName}/s]";
@@ -346,8 +405,7 @@ namespace Yaap
             if (Width.HasValue && Width.Value < capturedWidth)
                 capturedWidth = Width.Value;
 
-            var prologueCount = (string.IsNullOrWhiteSpace(Description) ? 0 : Description.Length) +
-                                 7;
+            var prologueCount = (string.IsNullOrWhiteSpace(Description) ? 0 : Description.Length) + 7;
 
             _maxGlyphWidth = capturedWidth - prologueCount - epilogueLen;
 
@@ -441,7 +499,6 @@ namespace Yaap
         [PublicAPI]
         public string UnitName { get; }
 
-
         /// <summary>
         /// If set, will be used to scale the <see cref="Progress"/> and <see cref="Total"/> values, using
         /// the International System of Units standard. (kilo, mega, etc.)
@@ -479,8 +536,7 @@ namespace Yaap
 
         internal bool NeedsRepaint
         {
-            get
-            {
+            get {
                 var updateSpan = Stopwatch.Frequency;
                 if (_sw.ElapsedTicks >= _swTicksIn1Hour || _totalTime.Ticks >= TimeSpan.TicksPerHour)
                     updateSpan = Stopwatch.Frequency * 60;
@@ -495,9 +551,10 @@ namespace Yaap
             }
         }
 
+        /// <summary>
+        /// Releases all resources used by the progress bar
+        /// </summary>
         public void Dispose() => YaapRegistry.RemoveInstance(this);
-
-        public void Clear() { }
 
         internal void Repaint(StringBuffer buffer)
         {
@@ -529,37 +586,30 @@ namespace Yaap
             // we just use the whole thing for the progress calc, otherwise we continuously sample
             // the last rate update since the previous rate and smooth it out using EMA/SmoothingFactor
             if (SmoothingFactor == 0)
-            {
                 _rate = ((double) progress * Stopwatch.Frequency) / elapsedTicks;
-            }
             else {
                 var dProgress = progress - _lastProgress;
                 var dTicks = elapsedTicks - _lastRepaintTicks;
 
                 var lastRate = ((double) dProgress * Stopwatch.Frequency) / dTicks;
-                if (_lastRepaintTicks == 0)
-                    _rate = lastRate;
-                else
-                    _rate = SmoothingFactor * lastRate + (1 - SmoothingFactor) * _rate;
+                _rate = _lastRepaintTicks == 0 ?
+                    lastRate :
+                    SmoothingFactor * lastRate + (1 - SmoothingFactor) * _rate;
             }
 
-            if (_rate <= 0)
-                _totalTime = TimeSpan.MaxValue;
-            else
-                _totalTime = new TimeSpan((long) (Total * TimeSpan.TicksPerSecond / _rate));
+            _totalTime = _rate <= 0 ?
+                TimeSpan.MaxValue :
+                new TimeSpan((long) (Total * TimeSpan.TicksPerSecond / _rate));
 
             //[{{0}}<{{1}}, {{2}}{unitName}/s]
             buffer.Append(" [");
             WriteTimes(buffer, new TimeSpan((elapsedTicks * TimeSpan.TicksPerSecond)/Stopwatch.Frequency), _totalTime);
             if (_rate < 1)
                 buffer.AppendFormat(", {0:F2}{1}/s]", _rate, UnitName);
-            else if (UseMetricAbbreviations)
-            {
+            else if (UseMetricAbbreviations) {
                 var (abbrevNum, suffix) = GetMetricAbbreviation((long) _rate);
                 buffer.AppendFormat(", {0,3}{1}{2}/s]", abbrevNum, suffix, UnitName);
-            }
-            else
-            {
+            } else {
                 buffer.AppendFormat(", {0,3}{1}/s]", (int) _rate, UnitName);
             }
 
@@ -624,6 +674,11 @@ namespace Yaap
         }
     }
 
+    /// <summary>
+    /// Represents a Yaap wrapped <see cref="IEnumerable{T}"/> object, where the enumerator progress automatically changes
+    /// the Yaap visual representation without further need to manually update the progress state
+    /// </summary>
+    /// <typeparam name="T">The type of objects to enumerate</typeparam>
     public class YaapEnumerable<T> : Yaap, IEnumerable<T>
     {
         readonly IEnumerable<T> _enumerable;
@@ -639,13 +694,18 @@ namespace Yaap
             _enumerable = e;
         }
 
+        /// <summary>
+        /// Attempt to get a "cheap" count value for the <see cref="IEnumerable{T}"/>, where "cheap" means that the enumerable is
+        /// never consumed no matter what
+        /// </summary>
+        /// <param name="source">The <see cref="IEnumerable{T}"/> object</param>
+        /// <returns>The count value, or -1 in case the cheap count failed</returns>
         public static int GetCheapCount(IEnumerable<T> source)
         {
             if (source == null)
                 throw new ArgumentNullException(nameof(source));
 
-            switch (source)
-            {
+            switch (source) {
                 case ICollection<T> collectionoft:
                     return collectionoft.Count;
                 case ICollection collection:
@@ -659,13 +719,10 @@ namespace Yaap
         #region Avert Your Eyes!
         static Func<IEnumerable<T>, int> CheapCountDelegate
         {
-            get
-            {
+            get {
                 return _cheapCount ?? (_cheapCount = GenerateGetCount());
 
-                Func<IEnumerable<T>, int> GenerateGetCount()
-                {
-
+                Func<IEnumerable<T>, int> GenerateGetCount() {
                     var iilp = typeof(Enumerable).Assembly.GetType("System.Linq.IIListProvider`1");
                     Debug.Assert(iilp != null);
                     var iilpt = iilp.MakeGenericType(typeof(T));
@@ -687,6 +744,10 @@ namespace Yaap
         }
         #endregion
 
+        /// <summary>
+        /// Returns an enumerator that iterates through the collection.
+        /// </summary>
+        /// <returns>Returns an enumerator that iterates through the collection.</returns>
         public IEnumerator<T> GetEnumerator()
         {
             // In the case of enumerable we can actually start ticking the elapsed clock
@@ -702,9 +763,30 @@ namespace Yaap
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     }
 
-    public static class EnumerableExtensions
+    /// <summary>
+    /// A static extension class that provides <see cref="IEnumerable{T}"/> <see cref="YaapEnumerable{T}"/> wrappers
+    /// </summary>
+    public static class YaapEnumerableExtensions
     {
-        public static IEnumerable<T> Yaap<T>(this IEnumerable<T> e, long total = -1, long initialProgress = 0, string description = null,
+        /// <summary>
+        /// Wrap the provided <see cref="IEnumerable{T}"/> with a <see cref="YaapEnumerable{T}"/> object
+        /// </summary>
+        /// <typeparam name="T">The type of objects to enumerate</typeparam>
+        /// <param name="e">The <see cref="IEnumerable{T}"/> instance to wrap</param>
+        /// <param name="total">The total number of elements of the wrapped <see cref="IEnumerable{T}"/> that will be enumerated</param>
+        /// <param name="initialProgress">The initial progress value</param>
+        /// <param name="description">A description of the enumeration object used by <see cref="Yaap"/></param>
+        /// <param name="width">The maximal width in charchters to be used by <see cref="Yaap"/></param>
+        /// <param name="useASCII">Force ASCII rendering, with no fancy unicode charchters</param>
+        /// <param name="style">The chosen <see cref="YaapBarStyle"/> for the progress bar, only used when <paramref name="useASCII"/> is false</param>
+        /// <param name="leave">Leave the <see cref="Yaap"/> on screen after it has been disposed</param>
+        /// <param name="verticalPosition">Optional pre-determined vertical position for the <see cref="Yaap"/> progress bar</param>
+        /// <param name="useMetricAbbreviations">Use metric abbreviations for various count objects on screen</param>
+        /// <param name="unitScale">Optional unit scale for the various count objects, only used when <paramref name="useMetricAbbreviations"/> is false</param>
+        /// <param name="unitName">Optional unit name for each iteration, defaults to "it" (short for iterations)</param>
+        /// <param name="smoothingFactor">A optional smoothing factor for calculating the rate with EMA (Exponential Moving Average), when set to 0, EMA is not used for rate/total time estimation</param>
+        /// <returns>The newly instantiated <see cref="YaapEnumerable{T}"/> wrapping the provided <see cref="IEnumerable{T}"/></returns>
+        public static YaapEnumerable<T> Yaap<T>(this IEnumerable<T> e, long total = -1, long initialProgress = 0, string description = null,
             int? width = null,
             bool useASCII = false, YaapBarStyle style = YaapBarStyle.BarHorizontal, bool leave = true,
             int? verticalPosition = null, bool useMetricAbbreviations = false, double? unitScale = null,
@@ -728,7 +810,7 @@ namespace Yaap
                 days = hours = minutes = seconds = ticks = 0;
                 return;
             }
-            var t = timeSpan.Ticks;
+            var t   = timeSpan.Ticks;
             days    = (int)(t / (TicksPerHour * 24));
             hours   = (int)((t / TicksPerHour) % 24);
             minutes = (int)((t / TicksPerMinute) % 60);

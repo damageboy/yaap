@@ -1,6 +1,28 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <Version>0.6.6</Version>
+    <LangVersion>latest</LangVersion>
+    <Authors>Dan Shechter</Authors>
+    <Company>Yaap</Company>
+    <Description>Yaap - Yet Another ANSI Progress Bar</Description>
+    <PackageTags>yaap console progress bar ansi</PackageTags>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>git@github.com:damageboy/yaap.git</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/damageboy/yaap</PackageProjectUrl>
+    <PackageLicenseUrl>https://raw.githubusercontent.com/damageboy/yaap/master/LICENSE</PackageLicenseUrl>
+    <Copyright>Copyright 2018 © Dan Shechter</Copyright>
+    <Deterministic>true</Deterministic>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <OutputPath>bin/debug</OutputPath>
+    <DocumentationFile>bin/debug/netstandard2.0/Yaap.xml</DocumentationFile>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <OutputPath>bin/release</OutputPath>
+    <DocumentationFile>bin/release/netstandard2.0/Yaap.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="JetBrains.Annotations" Version="11.1.0" />
