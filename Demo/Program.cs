@@ -27,6 +27,7 @@ namespace Demo
             YaapConsole.WriteLine("Here's a plain vanilla progress bar (_can_ be with nice smooth unicode even on windows*)");
             YaapConsole.WriteLine("It's width is constrainted to 80 charchters in total");
             YaapConsole.WriteLine("* for more on Windows, go to http://xxxxx");
+            YaapConsole.WriteLine();
 
             foreach (var i in Enumerable.Range(0, 200).Yaap(description: "regular", width: 80))
                 Thread.Sleep(100);
@@ -36,6 +37,7 @@ namespace Demo
             demo2:
             YaapConsole.WriteLine("Here's a progress bar that adapts to the width of the terminal");
             YaapConsole.WriteLine("It's pre-configured to slow down, and the rate/time estimation uses EMA to adapt more quickly");
+            YaapConsole.WriteLine();
 
             foreach (var i in Enumerable.Range(0, 200).Yaap(description: "smoothing", smoothingFactor: 0.1, useMetricAbbreviations: true))
                 Thread.Sleep(i / 2);
@@ -45,6 +47,7 @@ namespace Demo
             demo3:
             YaapConsole.WriteLine("You can even have nested loops, each with its own progress bar");
             YaapConsole.WriteLine("These bars also use metric abbreviation(s) for the progress/rate/total counts");
+            YaapConsole.WriteLine();
 
             foreach (var i in Enumerable.Range(0, 3).Yaap(description: "nested1", useMetricAbbreviations: true))
                 foreach (var j in Enumerable.Range(0, 10).Yaap(description: "nested2", useMetricAbbreviations: true))
@@ -55,21 +58,25 @@ namespace Demo
             demo4:
             YaapConsole.WriteLine("You can also launch multiple threads and have them progress independently");
             YaapConsole.WriteLine("While still updating the progress bars in a coherent way...");
+            YaapConsole.WriteLine();
 
-            Thread.Sleep(100);
+            var mre = new ManualResetEvent(false);
+            var allReady = new Semaphore(0, 10);
 
             var threads = Enumerable.Range(0, 10).Select(ti => new Thread(() =>
             {
                 var r = new Random((int) (DateTime.Now.Ticks % int.MaxValue));
-                foreach (var i in Enumerable.Range(0, 200).Yaap(description: $"thread{ti}", verticalPosition: ti))
+                var y = Enumerable.Range(0, 200).Yaap(description: $"thread{ti}", verticalPosition: ti);
+                allReady.Release();
+                mre.WaitOne();
+                foreach (var i in y)
                     Thread.Sleep(r.Next(90, 110) / (ti + 1));
             })).ToList();
 
-            foreach (var t in threads)
-                t.Start();
-
-            foreach (var t in threads)
-                t.Join();
+            foreach (var t in threads) t.Start();
+            foreach (var t in threads) allReady.WaitOne();
+            mre.Set();
+            foreach (var t in threads) t.Join();
 
             if (++startDemo > lastDemo) return;
         }
