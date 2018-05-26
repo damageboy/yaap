@@ -10,11 +10,14 @@
       { "files": [ "articles/**.md", "articles/**/toc.yml", "toc.yml", "*.md" ] },
       { "files": "fusion/**" }
     ],
-    "resource": [ { "files": [ "yaap.svg", "yaap-logo.svg", "images/**" ] } ],
+    "resource": [ { "files": [ "images/**" ] } ],
     "overwrite": [ { "files": [ "apidoc/**.md" ], "exclude": [ "obj/**", "_site/**" ] } ],
     "globalMetadata": {
-      "_appTitle": "Yaap",
-      "_appLogoPath": "yaap-logo.svg",
+      "_appTitle": "Yaap Documentation",
+      "_appFooter": "© Copyright 2018 Dan Shechter",
+      "_enableSearch": true,
+      "_appLogoPath": "images/yaap-logo.svg",
+      "_appFaviconPath": "images/yaap-favicon.png",
       "_gitContribute": {
         "repo": "https://github.com/org/damageboy/yaap",
         "branch": "dev",

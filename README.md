@@ -1,6 +1,6 @@
 |                                           |                                                              |                                                              |      |
 | :---------------------------------------: | :----------------------------------------------------------: | ------------------------------------------------------------ | ---- |
-| <img src="docs/yaap.svg" width="200px" /> | [![Build status](https://ci.appveyor.com/api/projects/status/o92rqmfl93rajety?svg=true)](https://ci.appveyor.com/project/damageboy/yaap) | [![NuGet](https://img.shields.io/nuget/v/Yaap.svg)](https://www.nuget.org/packages/Yaap/) |      |
+| <img src="docs/images/yaap.svg" width="200px" /> | [![Build status](https://ci.appveyor.com/api/projects/status/o92rqmfl93rajety?svg=true)](https://ci.appveyor.com/project/damageboy/yaap) | [![NuGet](https://img.shields.io/nuget/v/Yaap.svg)](https://www.nuget.org/packages/Yaap/) |      |
 
 # Yaap
 
