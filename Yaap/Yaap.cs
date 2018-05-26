@@ -186,9 +186,9 @@ namespace Yaap
 
         internal static void Write(string s) { lock (_consoleLock) { Console.Write(s); } }
 
-        internal static void WriteLine(string s) { lock (_consoleLock) { Console.WriteLine(s); } }
+        internal static void WriteLine(string s) { lock (_consoleLock) { Console.WriteLine(s); if (_totalLines > 0) _totalLines++; } }
 
-        internal static void WriteLine() { lock (_consoleLock) { Console.WriteLine(); } }
+        internal static void WriteLine() { lock (_consoleLock) { Console.WriteLine(); if (_totalLines > 0) _totalLines++;} }
 
     }
 
