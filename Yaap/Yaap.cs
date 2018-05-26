@@ -16,7 +16,6 @@ namespace Yaap
     internal static class YaapRegistry
     {
         static Thread _monitorThread;
-        static readonly StringBuffer _buffer = new StringBuffer(Console.WindowWidth);
         static readonly char[] _chars = new char[Console.WindowWidth * 2];
         static readonly object _consoleLock = new object();
         static readonly object _threadLock = new object();
@@ -145,31 +144,8 @@ namespace Yaap
 
         static void Repaint(Yaap yaap)
         {
-            const string ESC = "\u001B[";
-            const string eraseEndLine = ESC + "K";
-            //const string eraseStartLine = ESC + "1K";
-            //const string eraseLine = ESC + "2K";
+            var _buffer = yaap.Repaint();
             lock (_consoleLock) {
-                _buffer.Clear();
-                _buffer.Append('\r');
-                _buffer.Append(eraseEndLine);
-#if DEBUG
-                var startCount = _buffer.Count;
-#endif
-                yaap.Repaint(_buffer);
-#if DEBUG
-                if (_buffer.Count - startCount >= Console.WindowWidth)
-                {
-                    Console.WriteLine("----------------------------------------------");
-                    _buffer.CopyTo(0, _chars, 0, _buffer.Count);
-                    Console.Write(_chars, 0, _buffer.Count);
-                    Console.WriteLine();
-                    Console.WriteLine("----------------------------------------------");
-
-                    throw new InvalidProgramException(
-                        $"Something got totally messed up during repaint ({_buffer.Count},{startCount},{Console.WindowWidth})");
-                }
-#endif
                 _buffer.CopyTo(0, _chars, 0, _buffer.Count);
                 var oldLine = MoveTo(yaap);
                 Console.Write(_chars, 0, _buffer.Count);
@@ -299,6 +275,22 @@ namespace Yaap
         };
 
         static bool UnicodeNotWorky;
+        static readonly char[] ASCIIBarStyle = {'#'};
+        readonly char[] _selectedBarStyle;
+        internal int Position;
+        long _nextRepaintProgress;
+        readonly string _progressFmt;
+        //readonly string _timeFmt;
+        readonly int _maxGlyphWidth;
+        readonly long _repaintProgressIncrement;
+        internal readonly Stopwatch _sw;
+        TimeSpan _totalTime;
+        static readonly long _swTicksIn1Hour = Stopwatch.Frequency * 3600;
+        long _lastRepaintTicks;
+        double _rate;
+        long _lastProgress;
+        readonly StringBuffer _buffer;
+
         static Yaap()
         {
             void DoUnspeakableThingsOnWindows()
@@ -313,7 +305,7 @@ namespace Yaap
 
                 var vt100IsGo = Win32Console.EnableVT100Stuffs();
                 UnicodeNotWorky = vt100IsGo &&
-                    _acceptableUnicodeFonts.FirstOrDefault(s => Win32Console.ConsoleFontName.StartsWith(s)) == null;
+                                  _acceptableUnicodeFonts.FirstOrDefault(s => Win32Console.ConsoleFontName.StartsWith(s)) == null;
                 Win32Console.RestoreTerminalToPristineState();
             }
 
@@ -322,22 +314,6 @@ namespace Yaap
             else
                 UnicodeNotWorky = !(Console.OutputEncoding is UTF8Encoding);
         }
-
-        static readonly char[] ASCIIBarStyle = {'#'};
-
-        readonly char[] _selectedBarStyle;
-        internal int Position;
-        long _nextRepaintProgress;
-
-        readonly string _progressFmt;
-        //readonly string _timeFmt;
-        readonly int _maxGlyphWidth;
-        readonly long _repaintProgressIncrement;
-
-        internal readonly Stopwatch _sw;
-        TimeSpan _totalTime;
-        static readonly long _swTicksIn1Hour = Stopwatch.Frequency * 3600;
-        long _lastRepaintTicks;
 
         /// <summary>
         /// Instantiated a new Yaap object and paints it on the screen
@@ -378,6 +354,8 @@ namespace Yaap
             UnitScale              = null;
             SmoothingFactor        = smoothingFactor;
             UseMetricAbbreviations = useMetricAbbreviations;
+
+            _buffer = new StringBuffer(Console.WindowWidth);
 
             if (useASCII || UnicodeNotWorky)
                 _selectedBarStyle = ASCIIBarStyle;
@@ -423,8 +401,6 @@ namespace Yaap
         }
 
         static readonly string[] _metricUnits = {"", "k", "M", "G", "T", "P", "E", "Z"};
-        double _rate;
-        long _lastProgress;
 
         static (long num, string abbrev) GetMetricAbbreviation(long num)
         {
@@ -556,31 +532,44 @@ namespace Yaap
         /// </summary>
         public void Dispose() => YaapRegistry.RemoveInstance(this);
 
-        internal void Repaint(StringBuffer buffer)
+        internal StringBuffer Repaint()
         {
+            const string ESC = "\u001B[";
+            const string eraseEndLine = ESC + "K";
+            //const string eraseStartLine = ESC + "1K";
+            //const string eraseLine = ESC + "2K";
+
             // Capture progress while repainting
             var progress = Progress;
             var elapsedTicks = _sw.ElapsedTicks;
 
+            _buffer.Clear();
+            _buffer.Append('\r');
+            _buffer.Append(eraseEndLine);
+#if DEBUG
+            var startCount = _buffer.Count;
+#endif
+
+
             if (!string.IsNullOrWhiteSpace(Description)) {
-                buffer.Append(Description);
-                buffer.Append(": ");
+                _buffer.Append(Description);
+                _buffer.Append(": ");
             }
 
-            buffer.AppendFormat("{0,3}%|", progress * 100/ Total);
+            _buffer.AppendFormat("{0,3}%|", progress * 100/ Total);
 
             var numChars = 0;
             numChars = _selectedBarStyle.Length > 1 ?
-                RenderComplexProgressGlyphs(buffer, progress) :
-                RenderSimpleProgressGlyphs(buffer, progress);
+                RenderComplexProgressGlyphs(_buffer, progress) :
+                RenderSimpleProgressGlyphs(_buffer, progress);
 
-            buffer.Append(' ', _maxGlyphWidth - numChars);
+            _buffer.Append(' ', _maxGlyphWidth - numChars);
 
             if (UseMetricAbbreviations) {
                 var (abbrevNum, suffix) = GetMetricAbbreviation(Progress);
-                buffer.AppendFormat(_progressFmt, abbrevNum, suffix);
+                _buffer.AppendFormat(_progressFmt, abbrevNum, suffix);
             } else
-                buffer.AppendFormat(_progressFmt, Progress);
+                _buffer.AppendFormat(_progressFmt, Progress);
 
             // If we're "told" not to smooth out the rate/total time prediciton,
             // we just use the whole thing for the progress calc, otherwise we continuously sample
@@ -602,19 +591,33 @@ namespace Yaap
                 new TimeSpan((long) (Total * TimeSpan.TicksPerSecond / _rate));
 
             //[{{0}}<{{1}}, {{2}}{unitName}/s]
-            buffer.Append(" [");
-            WriteTimes(buffer, new TimeSpan((elapsedTicks * TimeSpan.TicksPerSecond)/Stopwatch.Frequency), _totalTime);
+            _buffer.Append(" [");
+            WriteTimes(_buffer, new TimeSpan((elapsedTicks * TimeSpan.TicksPerSecond)/Stopwatch.Frequency), _totalTime);
             if (_rate < 1)
-                buffer.AppendFormat(", {0:F2}{1}/s]", _rate, UnitName);
+                _buffer.AppendFormat(", {0:F2}{1}/s]", _rate, UnitName);
             else if (UseMetricAbbreviations) {
                 var (abbrevNum, suffix) = GetMetricAbbreviation((long) _rate);
-                buffer.AppendFormat(", {0,3}{1}{2}/s]", abbrevNum, suffix, UnitName);
+                _buffer.AppendFormat(", {0,3}{1}{2}/s]", abbrevNum, suffix, UnitName);
             } else {
-                buffer.AppendFormat(", {0,3}{1}/s]", (int) _rate, UnitName);
+                _buffer.AppendFormat(", {0,3}{1}/s]", (int) _rate, UnitName);
             }
+
+#if DEBUG
+            if (_buffer.Count - startCount >= Console.WindowWidth)
+            {
+                Console.WriteLine("----------------------------------------------");
+                Console.WriteLine(_buffer.ToString());
+                Console.WriteLine("----------------------------------------------");
+
+                throw new InvalidProgramException(
+                    $"Something got totally messed up during repaint ({_buffer.Count},{startCount},{Console.WindowWidth})");
+            }
+#endif
+
 
             _lastProgress = progress;
             _lastRepaintTicks = elapsedTicks;
+            return _buffer;
         }
 
         static void WriteTimes(StringBuffer buffer, TimeSpan elapsed, TimeSpan remaining)
