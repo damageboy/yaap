@@ -25,11 +25,11 @@ namespace Demo
 
             demo1:
             YaapConsole.WriteLine("Here's a plain vanilla progress bar (_can_ be with nice smooth unicode even on windows*)");
-            YaapConsole.WriteLine("It's width is constrainted to 80 charchters in total");
+            YaapConsole.WriteLine("It's width is constrainted to 100 charchters in total");
             YaapConsole.WriteLine("* for more on Windows, go to http://xxxxx");
             YaapConsole.WriteLine();
 
-            foreach (var i in Enumerable.Range(0, 200).Yaap(description: "regular", width: 80))
+            foreach (var i in Enumerable.Range(0, 200).Yaap(settings: new YaapSettings { Description = "regular", Width = 100 }))
                 Thread.Sleep(100);
 
             if (++startDemo > lastDemo) return;
@@ -39,7 +39,7 @@ namespace Demo
             YaapConsole.WriteLine("It's pre-configured to slow down, and the rate/time estimation uses EMA to adapt more quickly");
             YaapConsole.WriteLine();
 
-            foreach (var i in Enumerable.Range(0, 200).Yaap(description: "smoothing", smoothingFactor: 0.1, useMetricAbbreviations: true))
+            foreach (var i in Enumerable.Range(0, 200).Yaap(settings: new YaapSettings { Description = "smoothing", SmoothingFactor = 0.1, UseMetricAbbreviations = true }))
                 Thread.Sleep(i / 2);
 
             if (++startDemo > lastDemo) return;
@@ -49,9 +49,9 @@ namespace Demo
             YaapConsole.WriteLine("These bars also use metric abbreviation(s) for the progress/rate/total counts");
             YaapConsole.WriteLine();
 
-            foreach (var i in Enumerable.Range(0, 3).Yaap(description: "nested1", useMetricAbbreviations: true))
-                foreach (var j in Enumerable.Range(0, 10).Yaap(description: "nested2", useMetricAbbreviations: true))
-                  foreach (var k in Enumerable.Range(0, 100_000_000).Yaap(description: "nested3", useMetricAbbreviations: true))
+            foreach (var i in Enumerable.Range(0, 3).Yaap(settings: new YaapSettings { Description = "nested1", UseMetricAbbreviations = true }))
+                foreach (var j in Enumerable.Range(0, 10).Yaap(settings: new YaapSettings { Description = "nested2", UseMetricAbbreviations = true }))
+                    foreach (var k in Enumerable.Range(0, 100_000_000).Yaap(settings: new YaapSettings { Description = "nested3", UseMetricAbbreviations = true }))
                     ;
             if (++startDemo > lastDemo) return;
 
@@ -66,7 +66,7 @@ namespace Demo
             var threads = Enumerable.Range(0, 10).Select(ti => new Thread(() =>
             {
                 var r = new Random((int) (DateTime.Now.Ticks % int.MaxValue));
-                var y = Enumerable.Range(0, 200).Yaap(description: $"thread{ti}", verticalPosition: ti);
+                var y = Enumerable.Range(0, 200).Yaap(settings: new YaapSettings { Description = $"thread{ti}", VerticalPosition = ti });
                 allReady.Release();
                 mre.WaitOne();
                 foreach (var i in y)
