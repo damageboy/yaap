@@ -20,6 +20,7 @@ namespace Demo
                 case 2: goto demo2;
                 case 3: goto demo3;
                 case 4: goto demo4;
+                case 5: goto demo5;
             }
 
 
@@ -35,6 +36,15 @@ namespace Demo
             if (++startDemo > lastDemo) return;
 
             demo2:
+            YaapConsole.WriteLine("Here's the same demo as before, but this time with colors");
+            YaapConsole.WriteLine();
+
+            foreach (var i in Enumerable.Range(0, 200).Yaap(settings: new YaapSettings { Description = "regular", Width = 100, ColorScheme = YaapColorScheme.Bright}))
+                Thread.Sleep(100);
+
+            if (++startDemo > lastDemo) return;
+
+            demo3:
             YaapConsole.WriteLine("Here's a progress bar that adapts to the width of the terminal");
             YaapConsole.WriteLine("It's pre-configured to slow down, and the rate/time estimation uses EMA to adapt more quickly");
             YaapConsole.WriteLine();
@@ -44,7 +54,7 @@ namespace Demo
 
             if (++startDemo > lastDemo) return;
 
-            demo3:
+            demo4:
             YaapConsole.WriteLine("You can even have nested loops, each with its own progress bar");
             YaapConsole.WriteLine("These bars also use metric abbreviation(s) for the progress/rate/total counts");
             YaapConsole.WriteLine();
@@ -55,7 +65,7 @@ namespace Demo
                     ;
             if (++startDemo > lastDemo) return;
 
-            demo4:
+            demo5:
             YaapConsole.WriteLine("You can also launch multiple threads and have them progress independently");
             YaapConsole.WriteLine("While still updating the progress bars in a coherent way...");
             YaapConsole.WriteLine();

@@ -16,6 +16,14 @@ ProjectSection(SolutionItems) = preProject
 	docs\toc.yml = docs\toc.yml
 EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "articles", "articles", "{AA546219-3890-4514-AE6D-56F16442FAF6}"
+ProjectSection(SolutionItems) = preProject
+	docs\articles\FAQ.md = docs\articles\FAQ.md
+	docs\articles\start-here.md = docs\articles\start-here.md
+	docs\articles\Windows.md = docs\articles\Windows.md
+	docs\articles\toc.yml = docs\articles\toc.yml
+EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -40,5 +48,8 @@ Global
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {FF13B771-76E4-4C86-A722-67358F65D19A}
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{AA546219-3890-4514-AE6D-56F16442FAF6} = {BD2E8F8E-CD93-469A-A6A7-785CD42ECF50}
 	EndGlobalSection
 EndGlobal

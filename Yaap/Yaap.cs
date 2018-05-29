@@ -10,6 +10,7 @@ using System.Text;
 using System.Text.Formatting;
 using System.Threading;
 using JetBrains.Annotations;
+using System.Drawing;
 
 namespace Yaap
 {
@@ -150,12 +151,12 @@ namespace Yaap
 
         static void Repaint(Yaap yaap)
         {
-            var _buffer = yaap.Repaint();
+            var buffer = yaap.Repaint();
             lock (_consoleLock)
             {
-                _buffer.CopyTo(0, _chars, 0, _buffer.Count);
+                buffer.CopyTo(0, _chars, 0, buffer.Count);
                 var oldLine = MoveTo(yaap);
-                Console.Write(_chars, 0, _buffer.Count);
+                Console.Write(_chars, 0, buffer.Count);
                 Console.CursorTop = oldLine;
             }
         }
@@ -178,6 +179,7 @@ namespace Yaap
     /// <summary>
     /// The current state of the <see cref="Yaap"/> instance
     /// </summary>
+    [PublicAPI]
     public enum YaapState
     {
         /// <summary>
@@ -198,7 +200,8 @@ namespace Yaap
     /// An enumeration representing the various yaap progress bar elements
     /// </summary>
     [PublicAPI]
-    public enum YaapElements
+    [Flags]
+    public enum YaapElement
     {
         /// <summary>
         /// The description prefix visual Yaap element
@@ -224,6 +227,10 @@ namespace Yaap
         /// The rate visual Yaap element
         /// </summary>
         Rate = 0x20,
+        /// <summary>
+        /// A special or'd value representing all elements of Yaap
+        /// </summary>
+        All = Description|ProgressPercent|ProgressBar|ProgressCount|TimeCounts|Rate,
     }
 
     /// <summary>
@@ -319,10 +326,16 @@ namespace Yaap
         public string Description { get; set; }
 
         /// <summary>
-        /// Specify which visual elements will be presented to the user
+        /// A flags or'd value specifying which visual elements will be presented to the user
         /// </summary>
         [PublicAPI]
-        public YaapElements Elements { get; set; }
+        public YaapElement Elements { get; set; } = YaapElement.All;
+
+        /// <summary>
+        /// A <see cref="YaapColorScheme"/> instance representing the desired color scheme for Yaap
+        /// </summary>
+        [PublicAPI]
+        public YaapColorScheme ColorScheme { get; set; } = YaapColorScheme.NoColor;
 
         /// <summary>
         /// Use only ASCII charchters (notably the '#' charchter as the progress bar 'progress' glyph
@@ -392,37 +405,54 @@ namespace Yaap
 
     }
 
+    /// <inheritdoc />
     /// <summary>
     /// Represents a text mode progress bar control, that can visually provide user feedback as to the progress
     /// a long-standing operation, including progress visualization, elapsed time, total time, rate and more
     /// </summary>
     public class Yaap : IDisposable
     {
-        static readonly char[][] BarStyles =
-        {
+        // ReSharper disable once HeapView.ObjectAllocation.Evident
+        static readonly char[][] _barStyles = {
+            // ReSharper disable once HeapView.ObjectAllocation.Evident
             new [] { '▏', '▎', '▍', '▌', '▋', '▊', '▉', '█'},
+            // ReSharper disable once HeapView.ObjectAllocation.Evident
             new [] { '▁', '▂', '▃', '▄', '▅', '▆', '▇', '█'},
+            // ReSharper disable once HeapView.ObjectAllocation.Evident
             new [] { '⣀', '⣄', '⣤', '⣦', '⣶', '⣷', '⣿' },
+            // ReSharper disable once HeapView.ObjectAllocation.Evident
             new [] { '⣀', '⣄', '⣆', '⣇', '⣧', '⣷', '⣿' },
+            // ReSharper disable once HeapView.ObjectAllocation.Evident
             new [] { '○', '◔', '◐', '◕', '⬤' },
+            // ReSharper disable once HeapView.ObjectAllocation.Evident
             new [] { '□', '◱', '◧', '▣', '■' },
+            // ReSharper disable once HeapView.ObjectAllocation.Evident
             new [] { '□', '◱', '▨', '▩', '■' },
+            // ReSharper disable once HeapView.ObjectAllocation.Evident
             new [] { '□', '◱', '▥', '▦', '■' },
+            // ReSharper disable once HeapView.ObjectAllocation.Evident
             new [] { '⬜', '⬛' },
+            // ReSharper disable once HeapView.ObjectAllocation.Evident
             new [] { '░', '▒', '▓', '█' },
+            // ReSharper disable once HeapView.ObjectAllocation.Evident
             new [] { '░', '█' },
+            // ReSharper disable once HeapView.ObjectAllocation.Evident
             new [] { '▱', '▰' },
+            // ReSharper disable once HeapView.ObjectAllocation.Evident
             new [] { '▭', '◼' },
+            // ReSharper disable once HeapView.ObjectAllocation.Evident
             new [] { '▯', '▮' },
+            // ReSharper disable once HeapView.ObjectAllocation.Evident
             new [] { '◯', '⬤' },
+            // ReSharper disable once HeapView.ObjectAllocation.Evident
             new [] { '⚪','⚫' },
         };
 
-        static bool UnicodeNotWorky;
-        static readonly char[] ASCIIBarStyle = { '#' };
+        static bool _unicodeNotWorky;
+        static readonly char[] _asciiBarStyle = { '#' };
         readonly char[] _selectedBarStyle;
         long _nextRepaintProgress;
-        readonly string _progressFmt;
+        readonly string _progressCountFmt;
         readonly int _maxGlyphWidth;
         readonly long _repaintProgressIncrement;
         internal readonly Stopwatch _sw;
@@ -431,17 +461,18 @@ namespace Yaap
         long _lastRepaintTicks;
         double _rate;
         long _lastProgress;
-        string _unitName;
-        string _description;
-        bool _useMetricAbbreviations;
-        double _smoothingFactor;
+        readonly string _unitName;
+        readonly string _description;
+        readonly bool _useMetricAbbreviations;
+        readonly double _smoothingFactor;
         readonly StringBuffer _buffer;
 
         static Yaap()
         {
             void DoUnspeakableThingsOnWindows()
             {
-                var _acceptableUnicodeFonts = new[] {
+                // ReSharper disable once HeapView.ObjectAllocation.Evident
+                var acceptableUnicodeFonts = new[] {
                     "Hack",
                     "InputMono",
                     "Hasklig",
@@ -450,15 +481,15 @@ namespace Yaap
                 };
 
                 var vt100IsGo = Win32Console.EnableVT100Stuffs();
-                UnicodeNotWorky = vt100IsGo &&
-                    _acceptableUnicodeFonts.FirstOrDefault(s => Win32Console.ConsoleFontName.StartsWith(s, StringComparison.InvariantCulture)) == null;
+                _unicodeNotWorky = vt100IsGo &&
+                    acceptableUnicodeFonts.FirstOrDefault(s => Win32Console.ConsoleFontName.StartsWith(s, StringComparison.InvariantCulture)) == null;
                 Win32Console.RestoreTerminalToPristineState();
             }
 
             if (Environment.OSVersion.Platform == PlatformID.Win32NT)
                 DoUnspeakableThingsOnWindows();
             else
-                UnicodeNotWorky = !(Console.OutputEncoding is UTF8Encoding);
+                _unicodeNotWorky = !(Console.OutputEncoding is UTF8Encoding);
         }
 
         /// <summary>
@@ -481,41 +512,38 @@ namespace Yaap
             Total = total;
             Progress = initialProgress;
 
-            _unitName = settings.UnitName;
-            _description = settings.Description;
-            _useMetricAbbreviations = settings.UseMetricAbbreviations;
-            _smoothingFactor = settings.SmoothingFactor;
+            _unitName = Settings.UnitName;
+            _description = Settings.Description;
+            _useMetricAbbreviations = Settings.UseMetricAbbreviations;
+            _smoothingFactor = Settings.SmoothingFactor;
 
             _buffer = new StringBuffer(Console.WindowWidth);
 
-            if (settings.UseASCII || UnicodeNotWorky)
-                _selectedBarStyle = ASCIIBarStyle;
+            if (Settings.UseASCII || _unicodeNotWorky)
+                _selectedBarStyle = _asciiBarStyle;
             else
-                _selectedBarStyle = BarStyles[(int)settings.Style];
+                _selectedBarStyle = _barStyles[(int)settings.Style];
 
-            if (settings.UseMetricAbbreviations)
-            {
+            if (Settings.UseMetricAbbreviations) {
                 var (abbrevTotal, suffix) = GetMetricAbbreviation(total);
-                _progressFmt = $"| {{0,3}}{{1}}/{abbrevTotal}{suffix}";
+                _progressCountFmt = $"| {{0,3}}{{1}}/{abbrevTotal}{suffix}";
                 epilogueLen = "| 123K/999K".Length;
-            }
-            else
-            {
+            } else {
                 var totalChars = CountDigits(Total);
-                _progressFmt = $"| {{0,{totalChars}}}/{total}";
+                _progressCountFmt = $"| {{0,{totalChars}}}/{total}";
                 epilogueLen = 2 + totalChars * 2 + 1;
             }
 
             //_timeFmt = $"[{{0}}<{{1}}, {{2}}{unitName}/s]";
-            const string epilogueSample = " [11:22s<33:44s, 123.45/s]";
+            const string EPILOGUE_SAMPLE = " [11:22s<33:44s, 123.45/s]";
 
-            epilogueLen += epilogueSample.Length + settings.UnitName.Length;
+            epilogueLen += EPILOGUE_SAMPLE.Length + Settings.UnitName.Length;
 
             var capturedWidth = Console.WindowWidth - 2;
-            if (settings.Width.HasValue && settings.Width.Value < capturedWidth)
-                capturedWidth = settings.Width.Value;
+            if (Settings.Width.HasValue && Settings.Width.Value < capturedWidth)
+                capturedWidth = Settings.Width.Value;
 
-            var prologueCount = (string.IsNullOrWhiteSpace(settings.Description) ? 0 : settings.Description.Length) + 7;
+            var prologueCount = (string.IsNullOrWhiteSpace(Settings.Description) ? 0 : Settings.Description.Length) + 7;
 
             _maxGlyphWidth = capturedWidth - prologueCount - epilogueLen;
 
@@ -556,7 +584,7 @@ namespace Yaap
         /// The vertical position of this instance in relation to other concurrently "live" <see cref="Yaap"/> objects
         /// </summary>
         [PublicAPI]
-        public int Position;
+        public int Position { get; set; }
 
         /// <summary>
         /// The visual settings used for this instance
@@ -586,6 +614,7 @@ namespace Yaap
         public YaapState State { get; set; }
 
         static readonly string[] _metricUnits = { "", "k", "M", "G", "T", "P", "E", "Z" };
+        TerminalColorCode _lastColor;
 
         static (long num, string abbrev) GetMetricAbbreviation(long num)
         {
@@ -600,6 +629,7 @@ namespace Yaap
 
         static (double num, string abbrev) GetMetricAbbreviation(double num)
         {
+            // ReSharper disable once ForCanBeConvertedToForeach
             for (var i = 0; i < _metricUnits.Length; i++)
             {
                 if (num < 1000)
@@ -612,8 +642,7 @@ namespace Yaap
         static int CountDigits(long number)
         {
             var digits = 0;
-            while (number != 0)
-            {
+            while (number != 0) {
                 number /= 10;
                 digits++;
             }
@@ -644,37 +673,9 @@ namespace Yaap
         public void Dispose() => YaapRegistry.RemoveInstance(this);
 
 
-        const string ESC = "\u001B[";
-        const string eraseEndLine = ESC + "K";
-        const string fg_reset = ESC + "0m";
-        const string fg_bold = ESC + "1m";
-        const string fg_black = ESC + "0;30m";
-        const string fg_boldblack = ESC + "1;30m";
-        const string fg_red = ESC + "0;31m";
-        const string fg_boldred = ESC + "1;31m";
-        const string fg_green = ESC + "0;32m";
-        const string fg_boldgreen = ESC + "1;32m";
-        const string fg_yellow = ESC + "0;33m";
-        const string fg_boldyellow = ESC + "1;33m";
-        const string fg_blue = ESC + "0;34m";
-        const string fg_boldblue = ESC + "1;34m";
-        const string fg_purple = ESC + "0;35m";
-        const string fg_boldpurple = ESC + "1;35m";
-        const string fg_cyan = ESC + "0;36m";
-        const string fg_boldcyan = ESC + "1;36m";
-        const string fg_white = ESC + "0;37m";
-        const string fg_boldwhite = ESC + "1;37m";
-
-        const string bg_black = ESC + "40m";
-        const string bg_red = ESC + "41m";
-        const string bg_green = ESC + "42m";
-        const string bg_brown = ESC + "43m";
-        const string bg_blue = ESC + "44m";
-        const string bg_purple = ESC + "45m";
-        const string bg_cyan = ESC + "46m";
-        const string bg_white = ESC + "47m";
-        //const string eraseStartLine = ESC + "1K";
-        //const string eraseLine = ESC + "2K";
+        const string Esc = "\u001B[";
+        const string EraseEndLine = Esc + "K";
+        //const string FgBold = ESC + "1m";
 
         internal StringBuffer Repaint()
         {
@@ -682,41 +683,43 @@ namespace Yaap
             var progress = Progress;
             var elapsedTicks = _sw.ElapsedTicks;
 
+            var cs = Settings.ColorScheme;
+
             _buffer.Clear();
             _buffer.Append('\r');
-            _buffer.Append(eraseEndLine);
+            _buffer.Append(EraseEndLine);
 
-            if (!string.IsNullOrWhiteSpace(_description))
-            {
+            if (!string.IsNullOrWhiteSpace(_description)) {
                 _buffer.Append(_description);
                 _buffer.Append(": ");
             }
-            _buffer.Append(fg_yellow);
+            ChangeColor(cs.ProgressPercentColor);
             _buffer.AppendFormat("{0,3}%", progress * 100 / Total);
-            _buffer.Append(fg_reset);
+            ResetColor();
             _buffer.Append('|');
 
-            var numChars = 0;
-            _buffer.Append(fg_green);
-            numChars = _selectedBarStyle.Length > 1 ?
+            _buffer.Append(Settings.ColorScheme.ProgressBarColor.EscapeCode);
+            ChangeColor(cs.ProgressBarColor);
+            var numChars = _selectedBarStyle.Length > 1 ?
                 RenderComplexProgressGlyphs(_buffer, progress) :
                 RenderSimpleProgressGlyphs(_buffer, progress);
-            _buffer.Append(fg_reset);
+            ResetColor();
             _buffer.Append(' ', _maxGlyphWidth - numChars);
 
 
-            if (_useMetricAbbreviations)
-            {
+            ChangeColor(cs.ProgressCountColor);
+            if (_useMetricAbbreviations) {
                 var (abbrevNum, suffix) = GetMetricAbbreviation(Progress);
-                _buffer.AppendFormat(_progressFmt, abbrevNum, suffix);
-            }
-            else
-                _buffer.AppendFormat(_progressFmt, Progress);
+                _buffer.AppendFormat(_progressCountFmt, abbrevNum, suffix);
+            } else
+                _buffer.AppendFormat(_progressCountFmt, Progress);
+            ResetColor();
 
             // If we're "told" not to smooth out the rate/total time prediciton,
             // we just use the whole thing for the progress calc, otherwise we continuously sample
             // the last rate update since the previous rate and smooth it out using EMA/SmoothingFactor
-            if (_smoothingFactor == 0)
+            const double TOLERANCE = 1e-6;
+            if (Math.Abs(_smoothingFactor) < TOLERANCE)
                 _rate = ((double)progress * Stopwatch.Frequency) / elapsedTicks;
             else
             {
@@ -735,35 +738,55 @@ namespace Yaap
 
             //[{{0}}<{{1}}, {{2}}{unitName}/s]
             _buffer.Append(" [");
+            ChangeColor(cs.TimeColor);
             WriteTimes(_buffer, new TimeSpan((elapsedTicks * TimeSpan.TicksPerSecond) / Stopwatch.Frequency), _totalTime);
+            ResetColor();
 
+            var tc = TerminalColorCode.FromConsoleColor(ANSIColor.Cyan);
+
+            _buffer.Append(", ");
+            ChangeColor(cs.RateColor);
             if (_useMetricAbbreviations)
             {
                 var (abbrevNum, suffix) = GetMetricAbbreviation(_rate);
                 if (abbrevNum < 100)
-                    _buffer.AppendFormat(", {0:F2}{1}{2}/s]", abbrevNum, suffix, _unitName);
+                    _buffer.AppendFormat("{0:F2}{1}{2}/s]", abbrevNum, suffix, _unitName);
                 else
-                    _buffer.AppendFormat(", {0}{1}{2}/s]", (int)abbrevNum, suffix, _unitName);
+                    _buffer.AppendFormat("{0}{1}{2}/s]", (int)abbrevNum, suffix, _unitName);
             }
             else
             {
                 if (_rate < 100)
-                    _buffer.AppendFormat(", {0:F2}{1}/s]", _rate, _unitName);
+                    _buffer.AppendFormat("{0:F2}{1}/s]", _rate, _unitName);
                 else
-                    _buffer.AppendFormat(", {0}{1}/s]", (int)_rate, _unitName);
+                    _buffer.AppendFormat("{0}{1}/s]", (int)_rate, _unitName);
             }
+            ResetColor();
 
             _lastProgress = progress;
             _lastRepaintTicks = elapsedTicks;
             return _buffer;
         }
 
+        void ChangeColor(TerminalColorCode color)
+        {
+            _lastColor = color;
+            _buffer.Append(color.EscapeCode);
+        }
+
+        void ResetColor()
+        {
+            if (_lastColor == TerminalColorCode.None)
+                return;
+            _buffer.Append(TerminalColorCode.Reset.EscapeCode);
+        }
+
         static void WriteTimes(StringBuffer buffer, TimeSpan elapsed, TimeSpan remaining)
         {
             Debug.Assert(elapsed.Ticks >= 0);
             Debug.Assert(remaining.Ticks >= 0);
-            var (edays, ehours, eminutes, eseconds, eticks) = elapsed;
-            var (rdays, rhours, rminutes, rseconds, rticks) = remaining;
+            var (edays, ehours, eminutes, eseconds, _) = elapsed;
+            var (rdays, rhours, rminutes, rseconds, _) = remaining;
 
             if (edays + rdays > 0)
             {
@@ -945,6 +968,17 @@ namespace Yaap
             minutes = (int)((t / TicksPerMinute) % 60);
             seconds = (int)((t / TicksPerSecond) % 60);
             ticks = (int)(t % 10_000_000);
+        }
+    }
+
+    static class ColorDeconstruction
+    {
+        public static void Deconstruct(this Color color, out int r, out int g, out int b, out int a)
+        {
+            r = color.R;
+            g = color.G;
+            b = color.B;
+            a = color.A;
         }
     }
 }
