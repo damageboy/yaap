@@ -21,7 +21,7 @@ namespace Yaap.Tests
 
             var range = Enumerable.Range(0, 100);
 
-            Assert.That(specializedIilp.IsAssignableFrom(range.GetType()), Is.True);
+            Assert.That(specializedIilp.IsInstanceOfType(range), Is.True);
         }
 
 

@@ -28,7 +28,7 @@ namespace Yaap
         public TerminalColorCode RateColor { get; set; } = TerminalColorCode.None;
 
         /// <summary>
-        /// The <see cref="TerminalColorCode"/> of the <see cref="YaapElement.TimeCounts"/> element
+        /// The <see cref="TerminalColorCode"/> of the <see cref="YaapElement.Time"/> element
         /// </summary>
         public TerminalColorCode TimeColor { get; set; } = TerminalColorCode.None;
 

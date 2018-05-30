@@ -222,7 +222,7 @@ namespace Yaap
         /// <summary>
         /// The elapsed/total time visual Yaap elements
         /// </summary>
-        TimeCounts = 0x10,
+        Time = 0x10,
         /// <summary>
         /// The rate visual Yaap element
         /// </summary>
@@ -230,7 +230,7 @@ namespace Yaap
         /// <summary>
         /// A special or'd value representing all elements of Yaap
         /// </summary>
-        All = Description|ProgressPercent|ProgressBar|ProgressCount|TimeCounts|Rate,
+        All = Description|ProgressPercent|ProgressBar|ProgressCount|Time|Rate,
     }
 
     /// <summary>
@@ -522,16 +522,16 @@ namespace Yaap
             if (Settings.UseASCII || _unicodeNotWorky)
                 _selectedBarStyle = _asciiBarStyle;
             else
-                _selectedBarStyle = _barStyles[(int)settings.Style];
+                _selectedBarStyle = _barStyles[(int)Settings.Style];
 
             if (Settings.UseMetricAbbreviations) {
                 var (abbrevTotal, suffix) = GetMetricAbbreviation(total);
-                _progressCountFmt = $"| {{0,3}}{{1}}/{abbrevTotal}{suffix}";
-                epilogueLen = "| 123K/999K".Length;
+                _progressCountFmt = $"{{0,3}}{{1}}/{abbrevTotal}{suffix}";
+                epilogueLen = "|123K/999K".Length;
             } else {
                 var totalChars = CountDigits(Total);
-                _progressCountFmt = $"| {{0,{totalChars}}}/{total}";
-                epilogueLen = 2 + totalChars * 2 + 1;
+                _progressCountFmt = $"{{0,{totalChars}}}/{total}";
+                epilogueLen = 1 + totalChars * 2 + 1;
             }
 
             //_timeFmt = $"[{{0}}<{{1}}, {{2}}{unitName}/s]";
@@ -552,7 +552,7 @@ namespace Yaap
                 _repaintProgressIncrement = 1;
 
             _nextRepaintProgress =
-                ((Progress / _repaintProgressIncrement) * _repaintProgressIncrement) +
+                Progress / _repaintProgressIncrement * _repaintProgressIncrement +
                 _repaintProgressIncrement;
 
             _totalTime = TimeSpan.MaxValue;
@@ -584,7 +584,7 @@ namespace Yaap
         /// The vertical position of this instance in relation to other concurrently "live" <see cref="Yaap"/> objects
         /// </summary>
         [PublicAPI]
-        public int Position { get; set; }
+        public int Position { get; internal set; }
 
         /// <summary>
         /// The visual settings used for this instance
@@ -618,8 +618,7 @@ namespace Yaap
 
         static (long num, string abbrev) GetMetricAbbreviation(long num)
         {
-            for (var i = 0; i < _metricUnits.Length; i++)
-            {
+            for (var i = 0; i < _metricUnits.Length; i++) {
                 if (num < 1000)
                     return (num, _metricUnits[i]);
                 num /= 1000;
@@ -630,12 +629,12 @@ namespace Yaap
         static (double num, string abbrev) GetMetricAbbreviation(double num)
         {
             // ReSharper disable once ForCanBeConvertedToForeach
-            for (var i = 0; i < _metricUnits.Length; i++)
-            {
+            for (var i = 0; i < _metricUnits.Length; i++) {
                 if (num < 1000)
                     return (num, _metricUnits[i]);
                 num /= 1000;
             }
+
             throw new ArgumentOutOfRangeException(nameof(num), "is too large");
         }
 
@@ -677,11 +676,22 @@ namespace Yaap
         const string EraseEndLine = Esc + "K";
         //const string FgBold = ESC + "1m";
 
+        bool ShouldShoveDescription     => (Settings.Elements & YaapElement.Description) != 0;
+        bool ShouldShoveProgressPercent => (Settings.Elements & YaapElement.ProgressPercent) != 0;
+        bool ShouldShoveProgressBar     => (Settings.Elements & YaapElement.ProgressBar) != 0;
+        bool ShouldShoveProgressCount   => (Settings.Elements & YaapElement.ProgressCount) != 0;
+        bool ShouldShoveTime            => (Settings.Elements & YaapElement.Time) != 0;
+        bool ShouldShoveRate            => (Settings.Elements & YaapElement.Rate) != 0;
+
         internal StringBuffer Repaint()
         {
             // Capture progress while repainting
             var progress = Progress;
             var elapsedTicks = _sw.ElapsedTicks;
+
+            var elements = Settings.Elements;
+
+            RecalculateRateAndTotalTime();
 
             var cs = Settings.ColorScheme;
 
@@ -689,83 +699,120 @@ namespace Yaap
             _buffer.Append('\r');
             _buffer.Append(EraseEndLine);
 
-            if (!string.IsNullOrWhiteSpace(_description)) {
-                _buffer.Append(_description);
-                _buffer.Append(": ");
-            }
-            ChangeColor(cs.ProgressPercentColor);
-            _buffer.AppendFormat("{0,3}%", progress * 100 / Total);
-            ResetColor();
-            _buffer.Append('|');
-
-            _buffer.Append(Settings.ColorScheme.ProgressBarColor.EscapeCode);
-            ChangeColor(cs.ProgressBarColor);
-            var numChars = _selectedBarStyle.Length > 1 ?
-                RenderComplexProgressGlyphs(_buffer, progress) :
-                RenderSimpleProgressGlyphs(_buffer, progress);
-            ResetColor();
-            _buffer.Append(' ', _maxGlyphWidth - numChars);
-
-
-            ChangeColor(cs.ProgressCountColor);
-            if (_useMetricAbbreviations) {
-                var (abbrevNum, suffix) = GetMetricAbbreviation(Progress);
-                _buffer.AppendFormat(_progressCountFmt, abbrevNum, suffix);
-            } else
-                _buffer.AppendFormat(_progressCountFmt, Progress);
-            ResetColor();
-
-            // If we're "told" not to smooth out the rate/total time prediciton,
-            // we just use the whole thing for the progress calc, otherwise we continuously sample
-            // the last rate update since the previous rate and smooth it out using EMA/SmoothingFactor
-            const double TOLERANCE = 1e-6;
-            if (Math.Abs(_smoothingFactor) < TOLERANCE)
-                _rate = ((double)progress * Stopwatch.Frequency) / elapsedTicks;
-            else
-            {
-                var dProgress = progress - _lastProgress;
-                var dTicks = elapsedTicks - _lastRepaintTicks;
-
-                var lastRate = ((double)dProgress * Stopwatch.Frequency) / dTicks;
-                _rate = _lastRepaintTicks == 0 ?
-                    lastRate :
-                    _smoothingFactor * lastRate + (1 - _smoothingFactor) * _rate;
-            }
-
-            _totalTime = _rate <= 0 ?
-                TimeSpan.MaxValue :
-                new TimeSpan((long)(Total * TimeSpan.TicksPerSecond / _rate));
-
+            if (ShouldShoveDescription)
+                ShoveDescription();
+            if (ShouldShoveProgressPercent)
+                ShoveProgressPercentage();
+            if (ShouldShoveProgressBar)
+                ShoveProgressBar();
+            if (ShouldShoveProgressCount)
+                ShoveProgressTotals();
+            _buffer.Append(' ');
             //[{{0}}<{{1}}, {{2}}{unitName}/s]
-            _buffer.Append(" [");
-            ChangeColor(cs.TimeColor);
-            WriteTimes(_buffer, new TimeSpan((elapsedTicks * TimeSpan.TicksPerSecond) / Stopwatch.Frequency), _totalTime);
-            ResetColor();
 
-            var tc = TerminalColorCode.FromConsoleColor(ANSIColor.Cyan);
-
+            // At least one of Time|Rate is turned on?
+            if ((Settings.Elements & (YaapElement.Rate | YaapElement.Time)) != 0)
+                _buffer.Append('[');
+            ShoveTime();
+            if (ShouldShoveTime)
             _buffer.Append(", ");
-            ChangeColor(cs.RateColor);
-            if (_useMetricAbbreviations)
-            {
-                var (abbrevNum, suffix) = GetMetricAbbreviation(_rate);
-                if (abbrevNum < 100)
-                    _buffer.AppendFormat("{0:F2}{1}{2}/s]", abbrevNum, suffix, _unitName);
-                else
-                    _buffer.AppendFormat("{0}{1}{2}/s]", (int)abbrevNum, suffix, _unitName);
-            }
-            else
-            {
-                if (_rate < 100)
-                    _buffer.AppendFormat("{0:F2}{1}/s]", _rate, _unitName);
-                else
-                    _buffer.AppendFormat("{0}{1}/s]", (int)_rate, _unitName);
-            }
-            ResetColor();
+            if (ShouldShoveRate)
+                ShoveRate();
+            if ((Settings.Elements & (YaapElement.Rate | YaapElement.Time)) != 0)
+                _buffer.Append(']');
 
             _lastProgress = progress;
             _lastRepaintTicks = elapsedTicks;
             return _buffer;
+
+            void ShoveDescription()
+            {
+                if (string.IsNullOrWhiteSpace(_description)) return;
+                _buffer.Append(_description);
+                _buffer.Append(": ");
+            }
+
+            void ShoveProgressPercentage()
+            {
+                ChangeColor(cs.ProgressPercentColor);
+                _buffer.AppendFormat("{0,3}%", progress * 100 / Total);
+                ResetColor();
+            }
+
+            void ShoveProgressBar()
+            {
+                _buffer.Append('|');
+                _buffer.Append(Settings.ColorScheme.ProgressBarColor.EscapeCode);
+                ChangeColor(cs.ProgressBarColor);
+                var numChars = _selectedBarStyle.Length > 1
+                    ? RenderComplexProgressGlyphs(_buffer, progress)
+                    : RenderSimpleProgressGlyphs(_buffer, progress);
+                ResetColor();
+                _buffer.Append(' ', _maxGlyphWidth - numChars);
+                _buffer.Append('|');
+            }
+
+            void ShoveProgressTotals()
+            {
+                ChangeColor(cs.ProgressCountColor);
+                if (_useMetricAbbreviations)
+                {
+                    var (abbrevNum, suffix) = GetMetricAbbreviation(Progress);
+                    _buffer.AppendFormat(_progressCountFmt, abbrevNum, suffix);
+                }
+                else
+                    _buffer.AppendFormat(_progressCountFmt, Progress);
+
+                ResetColor();
+            }
+
+            void RecalculateRateAndTotalTime()
+            {
+                // If we're "told" not to smooth out the rate/total time prediciton,
+                // we just use the whole thing for the progress calc, otherwise we continuously sample
+                // the last rate update since the previous rate and smooth it out using EMA/SmoothingFactor
+                const double TOLERANCE = 1e-6;
+                if (Math.Abs(_smoothingFactor) < TOLERANCE)
+                    _rate = ((double) progress * Stopwatch.Frequency) / elapsedTicks;
+                else
+                {
+                    var dProgress = progress - _lastProgress;
+                    var dTicks = elapsedTicks - _lastRepaintTicks;
+
+                    var lastRate = ((double) dProgress * Stopwatch.Frequency) / dTicks;
+                    _rate = _lastRepaintTicks == 0 ? lastRate : _smoothingFactor * lastRate + (1 - _smoothingFactor) * _rate;
+                }
+
+                _totalTime = _rate <= 0 ? TimeSpan.MaxValue : new TimeSpan((long) (Total * TimeSpan.TicksPerSecond / _rate));
+            }
+
+            void ShoveTime()
+            {
+                ChangeColor(cs.TimeColor);
+                WriteTimes(_buffer, new TimeSpan((elapsedTicks * TimeSpan.TicksPerSecond) / Stopwatch.Frequency), _totalTime);
+                ResetColor();
+            }
+
+            void ShoveRate()
+            {
+                ChangeColor(cs.RateColor);
+                if (_useMetricAbbreviations)
+                {
+                    var (abbrevNum, suffix) = GetMetricAbbreviation(_rate);
+                    if (abbrevNum < 100)
+                        _buffer.AppendFormat("{0:F2}{1}{2}/s]", abbrevNum, suffix, _unitName);
+                    else
+                        _buffer.AppendFormat("{0}{1}{2}/s]", (int) abbrevNum, suffix, _unitName);
+                }
+                else
+                {
+                    if (_rate < 100)
+                        _buffer.AppendFormat("{0:F2}{1}/s", _rate, _unitName);
+                    else
+                        _buffer.AppendFormat("{0}{1}/s", (int) _rate, _unitName);
+                }
+                ResetColor();
+            }
         }
 
         void ChangeColor(TerminalColorCode color)
