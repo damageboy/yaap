@@ -1,6 +1,8 @@
 .vs
 build
 .obj
+obj/
+bin/
 .idea
 *.user
 .vscode/
