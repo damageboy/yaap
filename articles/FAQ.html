@@ -1,0 +1,174 @@
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="google-site-verification" content="wcrvaF3e88-Vb6y-9eUTqYaXDMOukzl4c-IdKByS0Xc">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:site_name" content="yaap">
+    <meta property="og:title" content="yaap">
+    <meta property="og:url" content="https://yaap.houmus.org/">
+    <link rel="canonical" href="https://yaap.houmus.org/">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="MobileOptimized" content="320">
+    <title>FAQ and Known Issues | Yaap </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="FAQ and Known Issues | Yaap ">
+    <meta name="generator" content="docfx 2.38.1.0">
+    
+    <link rel="shortcut icon" href="../images/yaap-favicon.png">
+    <link rel="stylesheet" href="../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../styles/docfx.css">
+    <link rel="stylesheet" href="../styles/hack.css">
+    <link rel="stylesheet" href="../styles/asciinema-player.css">
+    <link rel="stylesheet" href="../styles/main.css">
+    <meta property="docfx:navrel" content="../toc.html">
+    <meta property="docfx:tocrel" content="../fusion/toc.html">
+    
+    <meta property="docfx:rel" content="../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../index.html">
+                <img id="logo" class="svg" src="../images/yaap-logo.svg" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+        
+        <div id="search-results">
+          <div class="search-list"></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="faq-and-known-issues">FAQ and Known Issues</h1>
+
+<ul>
+<li><em>What sort of terminal support is required?</em>
+<ul>
+<li>Single progress bar at a time: only carriage-return (<code>'\r'</code>) is needed</li>
+<li>Nested /Multi progress bars: require support for moving the cursor up/down in addition to carriage-return</li>
+</ul>
+</li>
+<li><em>What specific terminals actually work well with Yaap?</em>
+<ul>
+<li>On Linux/Mac all terminal have full vt100 support, and should therefore work flawlessly</li>
+<li>On windows, things should work well on any version of windows, except for Unicode support, which has its own page on how to make that ok-ish as well. Generally speaking, CMD.exe and ConEmu have been known to work well</li>
+</ul>
+</li>
+<li><em>Will Yapp enumerate through the <code>IEnumerable&lt;T&gt;</code> to get the total count?</em>
+<ul>
+<li><u>Absolutely not!</u>
+Yaap goes through every possible known way of getting the <code>Count</code> &quot;value&quot; of the <code>IEnumerable&lt;T&gt;</code> <strong>WITHOUT</strong> actually enumerating it. This means that when an <code>ICollection</code>/<code>Array</code>/<code>IList</code> object is passed to Yaap, it will actually read the <code>Count</code> / <code>Length</code> property instead.
+Finally, Yaap uses and undocumented internal .NET interface called <code>IIListProvider</code> which can, sometimes calculate the count value of the enumerable without consuming it.
+For more information on what works/doesn't, consult the specific <a href="https://github.com/damageboy/yaap/blob/dev/Yaap.Tests/CountHackTests.cs">unit tests</a>.
+Finally, when all else fails, Yaap will throw an exception, explaining that the <code>total</code> progress value has to be provided by the user, for Yaap to work.</li>
+</ul>
+</li>
+<li><em>Can I write to the console while the progress bars are being updated?</em>
+<ul>
+<li>Yes, but not directly though <code>Console.Write*()</code> but rather going through <code>YaapConsole.Write*()</code> wrapper functions, which keep everything nice and tidy</li>
+</ul>
+</li>
+<li><em>Does dynamic resizing work?</em>
+<ul>
+<li>Kind of: When enlarging the width everything should be OK, when reducing the width, the screen could get momentarily garbled, but everything should look ok, &quot;eventually&quot;...</li>
+</ul>
+</li>
+</ul>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                  <li>
+                    <a href="https://github.com/org/damageboy/yaap/blob/dev/docs/articles/FAQ.md/#L1" class="contribution-link">Improve this Doc</a>
+                  </li>
+                </ul>
+              </div>
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            © Copyright 2018 Dan Shechter
+            
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../styles/docfx.js"></script>
+    <script type="text/javascript" src="../styles/asciinema-docfx-hack.js"></script>
+    <script type="text/javascript" src="../styles/asciinema-player.js"></script>
+    <script type="text/javascript" src="../styles/main.js"></script>
+    <script async="" src="https://www.googletagmanager.com/gtag/js?id=UA-124434205-2"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'UA-124434205-2');
+    </script>
+
+  </body>
+</html>

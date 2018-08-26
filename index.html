@@ -1,1 +1,357 @@
-The documentation will be here.
+﻿<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="google-site-verification" content="wcrvaF3e88-Vb6y-9eUTqYaXDMOukzl4c-IdKByS0Xc">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:site_name" content="yaap">
+    <meta property="og:title" content="yaap">
+    <meta property="og:url" content="https://yaap.houmus.org/">
+    <link rel="canonical" href="https://yaap.houmus.org/">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="MobileOptimized" content="320">
+    <title>Yaap | Yaap </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Yaap | Yaap ">
+    <meta name="generator" content="docfx 2.38.1.0">
+    
+    <link rel="shortcut icon" href="images/yaap-favicon.png">
+    <link rel="stylesheet" href="styles/docfx.vendor.css">
+    <link rel="stylesheet" href="styles/docfx.css">
+    <link rel="stylesheet" href="styles/hack.css">
+    <link rel="stylesheet" href="styles/asciinema-player.css">
+    <link rel="stylesheet" href="styles/main.css">
+    <meta property="docfx:navrel" content="toc.html">
+    <meta property="docfx:tocrel" content="toc.html">
+    
+    <meta property="docfx:rel" content="">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="index.html">
+                <img id="logo" class="svg" src="images/yaap-logo.svg" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+        
+        <div id="search-results">
+          <div class="search-list"></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+        <div class="article row grid">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+
+<p align="center"><img src="images/yaap.svg" width="500px" align="center"> </p>
+<h1 id="yaap">Yaap</h1>
+<p>Yaap is a straight up port of python venerable <a href="https://github.com/tqdm/tqdm">tqdm</a> to .NET / CLR</p>
+<p>Yaap stands for <strong>Y</strong>et <strong>A</strong>nother <strong>A</strong>NSI <strong>P</strong>rogressbar</p>
+<p>Feel free to browse some of the articles like the <a href="articles/start-here.html">Getting Started</a> page, <a href="articles/FAQ.html">FAQ</a> or figure out how to get the best looking progress bar under <a href="articles/Windows.html">Windows</a>, alternatively consule the <a href="api/index.md">API</a> docs</p>
+<h2 id="what-does-it-do">What does it do</h2>
+<p>Much like in python, Yaap can make .NET loops, <code>IEnumerable</code>s  and more show a smart progress meter.</p>
+<p>Here's what Yaap's own Demo looks like:</p>
+<div class="tabGroup" id="tabgroup_CeZOj-G++Q">
+<ul role="tablist">
+<li role="presentation">
+<a href="#tabpanel_CeZOj-G++Q_demo1" role="tab" aria-controls="tabpanel_CeZOj-G++Q_demo1" data-tab="demo1" tabindex="0" aria-selected="true">Simple Yaap</a>
+</li>
+<li role="presentation">
+<a href="#tabpanel_CeZOj-G++Q_demo2" role="tab" aria-controls="tabpanel_CeZOj-G++Q_demo2" data-tab="demo2" tabindex="-1">Colored Yaap</a>
+</li>
+<li role="presentation">
+<a href="#tabpanel_CeZOj-G++Q_demo3" role="tab" aria-controls="tabpanel_CeZOj-G++Q_demo3" data-tab="demo3" tabindex="-1">Paused/Stalled</a>
+</li>
+<li role="presentation">
+<a href="#tabpanel_CeZOj-G++Q_demo5" role="tab" aria-controls="tabpanel_CeZOj-G++Q_demo5" data-tab="demo5" tabindex="-1">Nested</a>
+</li>
+<li role="presentation">
+<a href="#tabpanel_CeZOj-G++Q_demo6" role="tab" aria-controls="tabpanel_CeZOj-G++Q_demo6" data-tab="demo6" tabindex="-1">Multi-threaded</a>
+</li>
+</ul>
+<section id="tabpanel_CeZOj-G++Q_demo1" role="tabpanel" data-tab="demo1">
+<img src="images/demo1.cast" rows="20" cols="95" loop="loop" poster="npt:0:10" class="asciinema">
+</section>
+<section id="tabpanel_CeZOj-G++Q_demo2" role="tabpanel" data-tab="demo2" aria-hidden="true" hidden="hidden">
+<img src="images/demo2.cast" rows="20" cols="95" loop="loop" poster="npt:0:10" class="asciinema">
+</section>
+<section id="tabpanel_CeZOj-G++Q_demo3" role="tabpanel" data-tab="demo3" aria-hidden="true" hidden="hidden">
+<img src="images/demo3.cast" rows="20" cols="95" loop="loop" poster="npt:0:10" class="asciinema">
+</section>
+<section id="tabpanel_CeZOj-G++Q_demo5" role="tabpanel" data-tab="demo5" aria-hidden="true" hidden="hidden">
+<img src="images/demo5.cast" rows="20" cols="95" loop="loop" poster="npt:0:10" class="asciinema">
+</section>
+<section id="tabpanel_CeZOj-G++Q_demo6" role="tabpanel" data-tab="demo6" aria-hidden="true" hidden="hidden">
+<img src="images/demo6.cast" rows="20" cols="95" loop="loop" poster="npt:0:02" class="asciinema">
+</section>
+</div>
+<div class="tabGroup" id="tabgroup_CeZOj-G++Q-1">
+<ul role="tablist">
+<li role="presentation">
+<a href="#tabpanel_CeZOj-G++Q-1_demo1" role="tab" aria-controls="tabpanel_CeZOj-G++Q-1_demo1" data-tab="demo1" tabindex="0" aria-selected="true">Simple Yaap</a>
+</li>
+<li role="presentation">
+<a href="#tabpanel_CeZOj-G++Q-1_demo2" role="tab" aria-controls="tabpanel_CeZOj-G++Q-1_demo2" data-tab="demo2" tabindex="-1">Colored Yaap</a>
+</li>
+<li role="presentation">
+<a href="#tabpanel_CeZOj-G++Q-1_demo3" role="tab" aria-controls="tabpanel_CeZOj-G++Q-1_demo3" data-tab="demo3" tabindex="-1">Paused/Stalled</a>
+</li>
+<li role="presentation">
+<a href="#tabpanel_CeZOj-G++Q-1_demo5" role="tab" aria-controls="tabpanel_CeZOj-G++Q-1_demo5" data-tab="demo5" tabindex="-1">Nested</a>
+</li>
+<li role="presentation">
+<a href="#tabpanel_CeZOj-G++Q-1_demo6" role="tab" aria-controls="tabpanel_CeZOj-G++Q-1_demo6" data-tab="demo6" tabindex="-1">Multi-threaded</a>
+</li>
+</ul>
+<section id="tabpanel_CeZOj-G++Q-1_demo1" role="tabpanel" data-tab="demo1">
+
+<pre><code class="lang-csharp">using static Yaap.YaapConsole;
+using static Enumerable;
+...
+foreach (var i in Range(0, 200).Yaap(settings: 
+    new YaapSettings {Description = &quot;regular&quot;, Width = 100})) {
+    Thread.Sleep(100);
+    switch (i) {
+        case 50: WriteLine(&quot;The (re)drawing of the progress bar, happens in the background&quot;); break;
+        case 100: Write(&quot;As long as you use YaapConsole.Write* methods....&quot;); break;
+        case 150: WriteLine(&quot; ... you can continue writing to the terminal&quot;); break;
+    }
+}
+</code></pre>
+</section>
+<section id="tabpanel_CeZOj-G++Q-1_demo2" role="tabpanel" data-tab="demo2" aria-hidden="true" hidden="hidden">
+
+<pre><code class="lang-csharp">using static Enumerable;
+...
+foreach (var i in Range(0, 200).Yaap(settings: new YaapSettings { 
+    Description = &quot;regular&quot;, 
+    Width = 100, 
+    ColorScheme = YaapColorScheme.Bright}))
+    Thread.Sleep(100);
+</code></pre>
+</section>
+<section id="tabpanel_CeZOj-G++Q-1_demo3" role="tabpanel" data-tab="demo3" aria-hidden="true" hidden="hidden">
+
+<pre><code class="lang-csharp">using static Enumerable;
+
+var yaap = Range(0, 2000).Yaap(settings: new YaapSettings {
+    Description = &quot;regular&quot;,
+    Width = 100,
+    ColorScheme = YaapColorScheme.Bright,
+    SmoothingFactor = 0.5,
+});
+
+foreach (var i in yaap) {
+    ...
+    yaap.State = YaapState.Paused;
+    ...
+    yaap.State = YaapState.Running;
+    ...
+    yaap.State = YaapState.Stalled;
+    ...
+    yaap.State = YaapState.Running;
+}
+</code></pre>
+</section>
+<section id="tabpanel_CeZOj-G++Q-1_demo5" role="tabpanel" data-tab="demo5" aria-hidden="true" hidden="hidden">
+
+<pre><code class="lang-csharp">foreach (var i in Range(0, 3).Yaap(settings: new YaapSettings { 
+    Description = &quot;nested1&quot;, UseMetricAbbreviations = true }))
+    foreach (var j in Range(0, 10).Yaap(settings: new YaapSettings { 
+        Description = &quot;nested2&quot;, UseMetricAbbreviations = true }))
+        foreach (var k in Range(0, 100_000_000).Yaap(settings: new YaapSettings {
+            Description = &quot;nested3&quot;, UseMetricAbbreviations = true }))
+            ; // Oh, just do nothing here
+
+</code></pre>
+</section>
+<section id="tabpanel_CeZOj-G++Q-1_demo6" role="tabpanel" data-tab="demo6" aria-hidden="true" hidden="hidden">
+
+<pre><code class="lang-csharp">using static Enumerable;
+
+var threads = Range(0, 10).Select(ti =&gt; new Thread(() =&gt; {
+    var r = new Random((int) (DateTime.Now.Ticks % int.MaxValue));
+    
+    foreach (var i in Range(0, 200).Yaap(settings: new YaapSettings {
+      Description = $&quot;thread{ti}&quot;, VerticalPosition = ti }) {
+      Thread.Sleep(r.Next(90, 110) / (ti + 1));
+})).ToList();
+    
+foreach (var t in threads) t.Start();
+</code></pre>
+</section>
+</div>
+<h2 id="what-is-a-yaap-made-of">What is a Yaap made of</h2>
+<p><img src="/home/dans/projects/public/yaap.git/docs/images/progressbar.png" alt=""></p>
+<h2 id="what-else">What Else</h2>
+<p>Yaap has the following features:</p>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Blurb</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Easy wrapping of <code>IEnumerable&lt;T&gt;</code> with a Yaap progress bar</td>
+<td><code>foreach (var i in Enumerable.Range(0, 1000).Yaap()) { }</code></td>
+</tr>
+<tr>
+<td>Manual (non <code>IEnumerable&lt;T&gt;</code>) progress updates</td>
+<td><code>var y = new Yaap(100); y.progress = 99;</code></td>
+</tr>
+<tr>
+<td>Low latency (~30ns) on enumeration</td>
+<td>Generally speaking, everything happens in background thread, and the enumeration is un-hindered<br> Checkout the <a href="https://github.com/damageboy/yaap/Yaap.Bench">benchmarks</a></td>
+</tr>
+<tr>
+<td>Zero allocation (post construction)</td>
+<td>What can I say, I just really hate alloactions<br>Checkout the <a href="https://github.com/damageboy/yaap/Yaap.Bench">benchmarks</a></td>
+</tr>
+<tr>
+<td>Full progress bar with smooth unicode and numeric progress, time and rate</td>
+<td>Yaap will detect unicode support and will opt to use the default unicode block charchter based theme, but you can use additional unicode themes using the provided <code>BarStyle</code> enumeration if you are a special snowflake<br>When unicode is not supported by the terminal, we us the plain ole' <code>#</code> char</td>
+</tr>
+<tr>
+<td>Elapsed time tracking / Total Time Prediction</td>
+<td>Yaap will time the elapsed time and predict the remaining time</td>
+</tr>
+<tr>
+<td>No-Embarrassment guarantee<br><br><br><sub>or your money back**</sub></td>
+<td>Yaap will never make you lose face with showing embarrassing things like 101% completion, or having the elapsed time go past the predicted time (Instead we'll keep changing the predicted time!)</td>
+</tr>
+<tr>
+<td>Rate Prediction</td>
+<td>Uses advanced machine learning to predict total estimated time (team available for acquihire)<sup>1</sup> <br><br><br> <sup>1</sup> OK, I lied, Just using Kalman filters effectively instead</td>
+</tr>
+<tr>
+<td>Metric Abbreviation for counts (K/M/G...)</td>
+<td>Yaap can automatically use metric units (<code>K</code>/<code>M</code>/<code>G</code>)</td>
+</tr>
+<tr>
+<td>Nested / Multiple concurrent progress bars</td>
+<td>Yaap will automatically detect nested progress bars with no extra effort on your part</td>
+</tr>
+<tr>
+<td>Colors</td>
+<td>Yaap can do normal 16 color palette or force TrueColor in case someone redifined yellow in their infinite wisdom</td>
+</tr>
+<tr>
+<td>Butter Smooth Progress bars</td>
+<td>Yaap can predict progress from rate, allowing smooth progress bars, even on slow/choppy enumeration</td>
+</tr>
+<tr>
+<td>Butter Smooth <strong>Nested</strong> Progress bars</td>
+<td>Yaap can estimate progress in higher level loops from the progress of their sub-loops(!)</td>
+</tr>
+<tr>
+<td>Yaap will <strong>NEVER</strong> <code>.Count()</code> your <code>IEnumerable</code></td>
+<td>Yaap never calls <code>.Count()</code>. It does other ungodly things to try and get your <code>IEnumerable</code> &quot;length&quot; in weird/undocumented ways, and when all fails, it will miserably fail, asking you to provide the <code>Total</code> value anagrammatically</td>
+</tr>
+<tr>
+<td>Turn elements on/off</td>
+<td></td>
+</tr>
+<tr>
+<td>Works on Windows</td>
+<td><a href="articles/Windows.html">But you have to work for it, at least bit</a></td>
+</tr>
+<tr>
+<td>Dynamic Resizing</td>
+<td></td>
+</tr>
+<tr>
+<td>Constant Width</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <div class="contribution">
+                <ul class="nav">
+                  <li>
+                    <a href="https://github.com/org/damageboy/yaap/blob/dev/docs/index.md/#L1" class="contribution-link">Improve this Doc</a>
+                  </li>
+                </ul>
+              </div>
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+              <!-- <p><a class="back-to-top" href="#top">Back to top</a><p> -->
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            © Copyright 2018 Dan Shechter
+            
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="styles/docfx.js"></script>
+    <script type="text/javascript" src="styles/asciinema-docfx-hack.js"></script>
+    <script type="text/javascript" src="styles/asciinema-player.js"></script>
+    <script type="text/javascript" src="styles/main.js"></script>
+    <script async="" src="https://www.googletagmanager.com/gtag/js?id=UA-124434205-2"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'UA-124434205-2');
+    </script>
+
+  </body>
+</html>

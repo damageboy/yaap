@@ -1,0 +1,509 @@
+{
+  "sitemap": {
+    "fileOptions": {
+      "**/index.md": {
+        "baseUrl": "https://yaap.houmus.org/",
+        "changefreq": "monthly",
+        "priority": 0.8
+      }
+    },
+    "baseUrl": "https://yaap.houmus.org/",
+    "changefreq": "monthly",
+    "priority": 0.1
+  },
+  "homepages": [],
+  "source_base_path": "/home/dans/projects/public/yaap.git/docs",
+  "xrefmap": "xrefmap.yml",
+  "files": [
+    {
+      "type": "Resource",
+      "output": {
+        "resource": {
+          "relative_path": "index.json"
+        }
+      },
+      "is_incremental": false
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Yaap.ANSIColor.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Yaap.ANSIColor.html",
+          "hash": "4LMkQe6tziRXVd2NPlBZIQ=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Yaap.TerminalColor.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Yaap.TerminalColor.html",
+          "hash": "3ktK6J6+hZAj/Vt2j1lAYw=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Yaap.Yaap.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Yaap.Yaap.html",
+          "hash": "+l0YRU/4DCCqHDog3MgUPQ=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Yaap.YaapBarStyle.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Yaap.YaapBarStyle.html",
+          "hash": "trKfdsA3AkTLeO5NnAanaA=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Yaap.YaapColorScheme.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Yaap.YaapColorScheme.html",
+          "hash": "PjcppLwbG82pcKYsHjmd4w=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Yaap.YaapConsole.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Yaap.YaapConsole.html",
+          "hash": "PrFVPPhvpnMfNq8avOR52Q=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Yaap.YaapElement.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Yaap.YaapElement.html",
+          "hash": "Z9gdvWYt9W1vJbUjDEozNQ=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Yaap.YaapEnumerable-1.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Yaap.YaapEnumerable-1.html",
+          "hash": "eSesUWiOXuGnUzrF3cgcJw=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Yaap.YaapEnumerableExtensions.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Yaap.YaapEnumerableExtensions.html",
+          "hash": "jBKW49IH72DF4D+0ES1+qQ=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Yaap.YaapSettings.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Yaap.YaapSettings.html",
+          "hash": "AOz1d/y/xRnXAH+YHnFpig=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Yaap.YaapState.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Yaap.YaapState.html",
+          "hash": "Cgcdi9eOHueO3a+jMbec6g=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "api/Yaap.yml",
+      "output": {
+        ".html": {
+          "relative_path": "api/Yaap.html",
+          "hash": "UJmcbI3v/ktqMZxZMSAqMA=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/FAQ.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/FAQ.html",
+          "hash": "faF1JIkncGVhmmnm3KTT4g=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/Windows.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/Windows.html",
+          "hash": "EUgT+cn+4OmabPr49tkJhA=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "articles/start-here.md",
+      "output": {
+        ".html": {
+          "relative_path": "articles/start-here.html",
+          "hash": "IlCmEWvvDwPT/ZT94tDMFQ=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Toc",
+      "source_relative_path": "fusion/toc.yml",
+      "output": {
+        ".html": {
+          "relative_path": "fusion/toc.html",
+          "hash": "v46fr4c+yV1+vqId9D/tgA=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/demo1.cast",
+      "output": {
+        "resource": {
+          "relative_path": "images/demo1.cast"
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/demo1.svg",
+      "output": {
+        "resource": {
+          "relative_path": "images/demo1.svg"
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/demo2.cast",
+      "output": {
+        "resource": {
+          "relative_path": "images/demo2.cast"
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/demo2.svg",
+      "output": {
+        "resource": {
+          "relative_path": "images/demo2.svg"
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/demo3.cast",
+      "output": {
+        "resource": {
+          "relative_path": "images/demo3.cast"
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/demo3.svg",
+      "output": {
+        "resource": {
+          "relative_path": "images/demo3.svg"
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/demo5.cast",
+      "output": {
+        "resource": {
+          "relative_path": "images/demo5.cast"
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/demo5.svg",
+      "output": {
+        "resource": {
+          "relative_path": "images/demo5.svg"
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/demo6.cast",
+      "output": {
+        "resource": {
+          "relative_path": "images/demo6.cast"
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/demo6.svg",
+      "output": {
+        "resource": {
+          "relative_path": "images/demo6.svg"
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/progressbar-elapsed.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/progressbar-elapsed.png"
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/progressbar-metric.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/progressbar-metric.png"
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/progressbar-nested.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/progressbar-nested.png"
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/progressbar-rate.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/progressbar-rate.png"
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/progressbar-total.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/progressbar-total.png"
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/progressbar.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/progressbar.png"
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/progressbar.xcf",
+      "output": {
+        "resource": {
+          "relative_path": "images/progressbar.xcf"
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/yaap-favicon.png",
+      "output": {
+        "resource": {
+          "relative_path": "images/yaap-favicon.png"
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/yaap-logo.svg",
+      "output": {
+        "resource": {
+          "relative_path": "images/yaap-logo.svg"
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Resource",
+      "source_relative_path": "images/yaap.svg",
+      "output": {
+        "resource": {
+          "relative_path": "images/yaap.svg"
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "log_codes": [
+        "InvalidFileLink"
+      ],
+      "type": "Conceptual",
+      "source_relative_path": "index.md",
+      "output": {
+        ".html": {
+          "relative_path": "index.html",
+          "hash": "udIrTu9SJO+g+4rXbFFiQA=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "Toc",
+      "source_relative_path": "toc.yml",
+      "output": {
+        ".html": {
+          "relative_path": "toc.html",
+          "hash": "GJeLLBpzIwqnktMJ2D9LZw=="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    }
+  ],
+  "incremental_info": [
+    {
+      "status": {
+        "can_incremental": true,
+        "incrementalPhase": "build"
+      },
+      "processors": {
+        "TocDocumentProcessor": {
+          "can_incremental": false,
+          "details": "Processor TocDocumentProcessor cannot support incremental build because the processor doesn't implement ISupportIncrementalDocumentProcessor interface.",
+          "incrementalPhase": "build"
+        },
+        "ManagedReferenceDocumentProcessor": {
+          "can_incremental": true,
+          "incrementalPhase": "build"
+        },
+        "ConceptualDocumentProcessor": {
+          "can_incremental": true,
+          "incrementalPhase": "build"
+        },
+        "ResourceDocumentProcessor": {
+          "can_incremental": false,
+          "details": "Processor ResourceDocumentProcessor cannot support incremental build because the processor doesn't implement ISupportIncrementalDocumentProcessor interface.",
+          "incrementalPhase": "build"
+        }
+      }
+    },
+    {
+      "status": {
+        "can_incremental": false,
+        "details": "Cannot support incremental post processing, the reason is: should not trace intermediate info.",
+        "incrementalPhase": "postProcessing"
+      },
+      "processors": {}
+    }
+  ],
+  "version_info": {},
+  "groups": [
+    {
+      "xrefmap": "xrefmap.yml"
+    }
+  ]
+}
