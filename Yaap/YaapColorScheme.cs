@@ -8,37 +8,48 @@ namespace Yaap
     public class YaapColorScheme
     {
         /// <summary>
-        /// The <see cref="TerminalColorCode"/> of the <see cref="YaapElement.ProgressBar"/> element
+        /// The <see cref="TerminalColor"/> of the <see cref="YaapElement.ProgressBar"/> element when in <see cref="YaapState.Running"/>
         /// </summary>
-        public TerminalColorCode ProgressBarColor { get; set; } = TerminalColorCode.None;
+        public TerminalColor ProgressBarColor { get; set; } = TerminalColor.None;
 
         /// <summary>
-        /// The <see cref="TerminalColorCode"/> of the <see cref="YaapElement.ProgressPercent"/> element
+        /// The <see cref="TerminalColor"/> of the <see cref="YaapElement.ProgressBar"/> element when in <see cref="YaapState.Paused"/>
         /// </summary>
-        public TerminalColorCode ProgressPercentColor { get; set; } = TerminalColorCode.None;
+        public TerminalColor ProgressBarPausedColor { get; set; } = TerminalColor.None;
+
 
         /// <summary>
-        /// The <see cref="TerminalColorCode"/> of the <see cref="YaapElement.ProgressCount"/> element
+        /// The <see cref="TerminalColor"/> of the <see cref="YaapElement.ProgressBar"/> element when in <see cref="YaapState.Stalled"/>
         /// </summary>
-        public TerminalColorCode ProgressCountColor { get; set; } = TerminalColorCode.None;
+        public TerminalColor ProgressBarStalledColor { get; set; } = TerminalColor.None;
 
         /// <summary>
-        /// The <see cref="TerminalColorCode"/> of the <see cref="YaapElement.Rate"/> element
+        /// The <see cref="TerminalColor"/> of the <see cref="YaapElement.ProgressPercent"/> element
         /// </summary>
-        public TerminalColorCode RateColor { get; set; } = TerminalColorCode.None;
+        public TerminalColor ProgressPercentColor { get; set; } = TerminalColor.None;
 
         /// <summary>
-        /// The <see cref="TerminalColorCode"/> of the <see cref="YaapElement.Time"/> element
+        /// The <see cref="TerminalColor"/> of the <see cref="YaapElement.ProgressCount"/> element
         /// </summary>
-        public TerminalColorCode TimeColor { get; set; } = TerminalColorCode.None;
+        public TerminalColor ProgressCountColor { get; set; } = TerminalColor.None;
+
+        /// <summary>
+        /// The <see cref="TerminalColor"/> of the <see cref="YaapElement.Rate"/> element
+        /// </summary>
+        public TerminalColor RateColor { get; set; } = TerminalColor.None;
+
+        /// <summary>
+        /// The <see cref="TerminalColor"/> of the <see cref="YaapElement.Time"/> element
+        /// </summary>
+        public TerminalColor TimeColor { get; set; } = TerminalColor.None;
 
         /// <summary>
         /// The "no-color" color scheme for Yaap
         /// </summary>
         public static YaapColorScheme NoColor = new YaapColorScheme()
         {
-            ProgressBarColor     = TerminalColorCode.None,
-            ProgressPercentColor = TerminalColorCode.None,
+            ProgressBarColor     = TerminalColor.None,
+            ProgressPercentColor = TerminalColor.None,
         };
 
         /// <summary>
@@ -46,11 +57,13 @@ namespace Yaap
         /// </summary>
         public static YaapColorScheme Bright = new YaapColorScheme()
         {
-            ProgressBarColor     = TerminalColorCode.FromConsoleColor(ANSIColor.BrightGreen),
-            ProgressPercentColor = TerminalColorCode.FromConsoleColor(ANSIColor.BrightYellow),
-            ProgressCountColor   = TerminalColorCode.FromConsoleColor(ANSIColor.BrightMagenta),
-            RateColor            = TerminalColorCode.FromConsoleColor(ANSIColor.BrightCyan),
-            TimeColor            = TerminalColorCode.FromConsoleColor(ANSIColor.BrightGreen),
+            ProgressBarColor         = TerminalColor.FromConsoleColor(ANSIColor.BrightGreen),
+            ProgressBarPausedColor   = TerminalColor.FromConsoleColor(ANSIColor.BrightYellow),
+            ProgressBarStalledColor  = TerminalColor.FromConsoleColor(ANSIColor.Red),
+            ProgressPercentColor     = TerminalColor.FromConsoleColor(ANSIColor.BrightYellow),
+            ProgressCountColor       = TerminalColor.FromConsoleColor(ANSIColor.BrightMagenta),
+            RateColor                = TerminalColor.FromConsoleColor(ANSIColor.BrightCyan),
+            TimeColor                = TerminalColor.FromConsoleColor(ANSIColor.BrightGreen),
         };
 
         /// <summary>
@@ -58,11 +71,13 @@ namespace Yaap
         /// </summary>
         public static YaapColorScheme Dark = new YaapColorScheme()
         {
-            ProgressBarColor     = TerminalColorCode.FromConsoleColor(ANSIColor.Green),
-            ProgressPercentColor = TerminalColorCode.FromConsoleColor(ANSIColor.Yellow),
-            ProgressCountColor   = TerminalColorCode.FromConsoleColor(ANSIColor.Magenta),
-            RateColor            = TerminalColorCode.FromConsoleColor(ANSIColor.Cyan),
-            TimeColor            = TerminalColorCode.FromConsoleColor(ANSIColor.Green),
+            ProgressBarColor         = TerminalColor.FromConsoleColor(ANSIColor.Green),
+            ProgressBarPausedColor   = TerminalColor.FromConsoleColor(ANSIColor.Yellow),
+            ProgressBarStalledColor  = TerminalColor.FromConsoleColor(ANSIColor.Red),
+            ProgressPercentColor     = TerminalColor.FromConsoleColor(ANSIColor.Yellow),
+            ProgressCountColor       = TerminalColor.FromConsoleColor(ANSIColor.Magenta),
+            RateColor                = TerminalColor.FromConsoleColor(ANSIColor.Cyan),
+            TimeColor                = TerminalColor.FromConsoleColor(ANSIColor.Green),
         };
     }
 }

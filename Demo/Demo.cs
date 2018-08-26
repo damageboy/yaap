@@ -5,14 +5,14 @@ using Yaap;
 
 namespace Demo
 {
-    static class Program
+    static class Demo
     {
         static void Main(string[] args)
         {
             var startDemo = args.Length > 0
-                ? (int.TryParse(args[0], out var tmp) ? tmp : int.MaxValue)
-                : int.MaxValue;
-            var lastDemo = startDemo == Int32.MaxValue ? Int32.MaxValue : startDemo + 1;
+                ? (int.TryParse(args[0], out var tmp) ? tmp : 1)
+                : 1;
+            var lastDemo = args.Length > 0 ? startDemo + 1 : Int32.MaxValue;
 
             switch (startDemo)
             {
@@ -21,6 +21,7 @@ namespace Demo
                 case 3: goto demo3;
                 case 4: goto demo4;
                 case 5: goto demo5;
+                case 6: goto demo6;
             }
 
 
@@ -30,12 +31,25 @@ namespace Demo
             YaapConsole.WriteLine("* for more on Windows, go to http://xxxxx");
             YaapConsole.WriteLine();
 
-            foreach (var i in Enumerable.Range(0, 200).Yaap(settings: new YaapSettings { Description = "regular", Width = 100 }))
+            foreach (var i in Enumerable.Range(0, 200).Yaap(settings: new YaapSettings {Description = "regular", Width = 100})) {
                 Thread.Sleep(100);
+                switch (i) {
+                    case 50:
+                        YaapConsole.WriteLine("The (re)drawing of the progress bar, happens in the background");
+                        break;
+                    case 100:
+                        YaapConsole.Write("As long as you use YaapConsole.Write* methods....");
+                        break;
+                    case 150:
+                        YaapConsole.WriteLine(" ... you can continue writing to the terminal");
+                        break;
+                }
+            }
 
             if (++startDemo > lastDemo) return;
 
             demo2:
+            YaapConsole.WriteLine();
             YaapConsole.WriteLine("Here's the same demo as before, but this time with colors");
             YaapConsole.WriteLine();
 
@@ -45,6 +59,38 @@ namespace Demo
             if (++startDemo > lastDemo) return;
 
             demo3:
+            YaapConsole.WriteLine("When in color mode, Yaap can also express pauses and detect stalls");
+            YaapConsole.WriteLine();
+
+            var yaap = Enumerable.Range(0, 2000).Yaap(settings: new YaapSettings {
+                Description = "regular",
+                Width = 100,
+                ColorScheme = YaapColorScheme.Bright,
+                SmoothingFactor = 0.5,
+            });
+
+            foreach (var i in yaap) {
+                if (i == 900) {
+                    yaap.State = YaapState.Paused;
+                    Thread.Sleep(5000);
+                    yaap.State = YaapState.Running;
+                    continue;
+                }
+
+                if (i == 1900) {
+                    yaap.State = YaapState.Stalled;
+                    Thread.Sleep(5000);
+                    yaap.State = YaapState.Running;
+                    continue;
+                }
+
+                Thread.Sleep(10);
+            }
+
+            if (++startDemo > lastDemo) return;
+
+
+            demo4:
             YaapConsole.WriteLine("Here's a progress bar that adapts to the width of the terminal");
             YaapConsole.WriteLine("It's pre-configured to slow down, and the rate/time estimation uses EMA to adapt more quickly");
             YaapConsole.WriteLine();
@@ -54,7 +100,7 @@ namespace Demo
 
             if (++startDemo > lastDemo) return;
 
-            demo4:
+            demo5:
             YaapConsole.WriteLine("You can even have nested loops, each with its own progress bar");
             YaapConsole.WriteLine("These bars also use metric abbreviation(s) for the progress/rate/total counts");
             YaapConsole.WriteLine();
@@ -65,7 +111,7 @@ namespace Demo
                     ;
             if (++startDemo > lastDemo) return;
 
-            demo5:
+            demo6:
             YaapConsole.WriteLine("You can also launch multiple threads and have them progress independently");
             YaapConsole.WriteLine("While still updating the progress bars in a coherent way...");
             YaapConsole.WriteLine();

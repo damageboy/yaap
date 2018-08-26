@@ -28,5 +28,6 @@ namespace Yaap
         /// </summary>
         [PublicAPI]
         public static void WriteLine() => YaapRegistry.WriteLine();
+
     }
 }

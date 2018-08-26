@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+using System.Text;
 
 namespace Yaap
 {
@@ -166,6 +167,7 @@ namespace Yaap
             if (!SetConsoleMode(hIn, dwInMode))
                 return false; // Failed to set VT input mode, can't do anything here.
 
+            Console.OutputEncoding = Encoding.UTF8;
             const uint CP_UTF8 = 65001;
             SetConsoleOutputCP(CP_UTF8);
             SetConsoleCP(CP_UTF8);
