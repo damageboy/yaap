@@ -14,23 +14,7 @@ Much like in python, Yaap can make .NET loops, `IEnumerable`s  and more show a s
 
 Here's what Yaap's own Demo looks like:
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+![demo1](images/demo1.svg)
 
 ## What Else
 
