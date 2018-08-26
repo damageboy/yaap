@@ -12,7 +12,7 @@ namespace Demo
             var startDemo = args.Length > 0
                 ? (int.TryParse(args[0], out var tmp) ? tmp : 1)
                 : 1;
-            var lastDemo = args.Length > 0 ? startDemo + 1 : Int32.MaxValue;
+            var lastDemo = args.Length > 0 ? startDemo : Int32.MaxValue;
 
             switch (startDemo)
             {
