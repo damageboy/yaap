@@ -1,0 +1,11 @@
+<Project>
+  <PropertyGroup>
+    <DefaultLanguage>en-US</DefaultLanguage>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Prefer32Bit>false</Prefer32Bit>
+    <LangVersion>latest</LangVersion>
+    <TargetLatestRuntimePatch>true</TargetLatestRuntimePatch>
+    <BaseIntermediateOutputPath>$(MSBuildThisFileDirectory).obj\$(MSBuildProjectName)\</BaseIntermediateOutputPath>
+    <BaseOutputPath>$(MSBuildThisFileDirectory)build\\$(MSBuildProjectName)\</BaseOutputPath>
+  </PropertyGroup>
+</Project>
