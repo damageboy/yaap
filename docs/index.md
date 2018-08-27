@@ -15,10 +15,10 @@ Much like in python, Yaap can make .NET loops, `IEnumerable`s  and more show a s
 Here's what Yaap's own Demo looks like:
 
 ### [Simple Yaap](#tab/demo1)
-![demo1](images/demo1.svg)
+<img src="images/demo1.svg" id="demo1" class="termtosvg" alt="demo1" />
 
 ### [Color Yaap](#tab/demo2)
-![demo1](images/demo2.svg)
+<img src="images/demo2.svg" id="demo1" class="termtosvg" alt="demo2" />
 
 ---
 
