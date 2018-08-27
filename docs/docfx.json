@@ -12,8 +12,16 @@
     ],
     "resource": [ { "files": [ "images/**" ] } ],
     "overwrite": [ { "files": [ "apidoc/**.md" ], "exclude": [ "obj/**", "_site/**" ] } ],
+    "sitemap":{
+        "baseUrl": "https://yaap.houmus.org",
+        "priority": 0.1,
+        "changefreq": "monthly",
+        "fileOptions":{
+            "**/index.md": { "priority": 0.8 }
+        }
+    },
     "globalMetadata": {
-      "_appTitle": "Yaap Documentation",
+      "_appTitle": "Yaap",
       "_appFooter": "© Copyright 2018 Dan Shechter",
       "_enableSearch": true,
       "_appLogoPath": "images/yaap-logo.svg",
