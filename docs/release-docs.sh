@@ -5,11 +5,13 @@ set -e
 COMMITER=$(git config user.email)
 COMMITER_NAME=$(git config user.name)
 
-mono ~/docfx/docfx.exe ./docs/docfx.json
 
 
-SOURCE_DIR=$PWD
-TEMP_REPO_DIR=$PWD/../yaap-pages.git
+THIS_DIR=$(dirname $0)
+SOURCE_DIR=($THIS_DIR/..)
+TEMP_REPO_DIR=$SOURCE_DIR/../yaap-pages.git
+
+(cd $THIS_DIR; mono ~/docfx/docfx.exe docfx.json)
 
 echo "Removing temporary doc directory $TEMP_REPO_DIR"
 rm -rf $TEMP_REPO_DIR
@@ -19,12 +21,8 @@ mkdir $TEMP_REPO_DIR
 git fetch
 
 echo "Cloning the repo with the gh-pages branch"
-git clone $PWD --branch gh-pages $TEMP_REPO_DIR
+git clone $SOURCE_DIR --branch gh-pages $TEMP_REPO_DIR
 (cd $TEMP_REPO_DIR; git reset --hard origin/gh-pages)
-
-#echo "Clear repo directory"
-#cd $TEMP_REPO_DIR
-#git rm -r *
 
 echo "Copy documentation into the repo"
 (cd $SOURCE_DIR/docs/_site/;  tar cf - *) | (cd $TEMP_REPO_DIR; tar xf -)
