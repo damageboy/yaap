@@ -229,32 +229,10 @@
     },
     {
       "type": "Resource",
-      "source_relative_path": "images/demo1.svg",
-      "output": {
-        "resource": {
-          "relative_path": "images/demo1.svg"
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "Resource",
       "source_relative_path": "images/demo2.cast",
       "output": {
         "resource": {
           "relative_path": "images/demo2.cast"
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "Resource",
-      "source_relative_path": "images/demo2.svg",
-      "output": {
-        "resource": {
-          "relative_path": "images/demo2.svg"
         }
       },
       "is_incremental": false,
@@ -273,17 +251,6 @@
     },
     {
       "type": "Resource",
-      "source_relative_path": "images/demo3.svg",
-      "output": {
-        "resource": {
-          "relative_path": "images/demo3.svg"
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "Resource",
       "source_relative_path": "images/demo5.cast",
       "output": {
         "resource": {
@@ -295,87 +262,10 @@
     },
     {
       "type": "Resource",
-      "source_relative_path": "images/demo5.svg",
-      "output": {
-        "resource": {
-          "relative_path": "images/demo5.svg"
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "Resource",
       "source_relative_path": "images/demo6.cast",
       "output": {
         "resource": {
           "relative_path": "images/demo6.cast"
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "Resource",
-      "source_relative_path": "images/demo6.svg",
-      "output": {
-        "resource": {
-          "relative_path": "images/demo6.svg"
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "Resource",
-      "source_relative_path": "images/progressbar-elapsed.png",
-      "output": {
-        "resource": {
-          "relative_path": "images/progressbar-elapsed.png"
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "Resource",
-      "source_relative_path": "images/progressbar-metric.png",
-      "output": {
-        "resource": {
-          "relative_path": "images/progressbar-metric.png"
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "Resource",
-      "source_relative_path": "images/progressbar-nested.png",
-      "output": {
-        "resource": {
-          "relative_path": "images/progressbar-nested.png"
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "Resource",
-      "source_relative_path": "images/progressbar-rate.png",
-      "output": {
-        "resource": {
-          "relative_path": "images/progressbar-rate.png"
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "Resource",
-      "source_relative_path": "images/progressbar-total.png",
-      "output": {
-        "resource": {
-          "relative_path": "images/progressbar-total.png"
         }
       },
       "is_incremental": false,
@@ -445,7 +335,7 @@
       "output": {
         ".html": {
           "relative_path": "index.html",
-          "hash": "udIrTu9SJO+g+4rXbFFiQA=="
+          "hash": "CRETZoFxpnCF2+N/i5vRkQ=="
         }
       },
       "is_incremental": false,
@@ -471,9 +361,9 @@
         "incrementalPhase": "build"
       },
       "processors": {
-        "TocDocumentProcessor": {
+        "ResourceDocumentProcessor": {
           "can_incremental": false,
-          "details": "Processor TocDocumentProcessor cannot support incremental build because the processor doesn't implement ISupportIncrementalDocumentProcessor interface.",
+          "details": "Processor ResourceDocumentProcessor cannot support incremental build because the processor doesn't implement ISupportIncrementalDocumentProcessor interface.",
           "incrementalPhase": "build"
         },
         "ManagedReferenceDocumentProcessor": {
@@ -484,9 +374,9 @@
           "can_incremental": true,
           "incrementalPhase": "build"
         },
-        "ResourceDocumentProcessor": {
+        "TocDocumentProcessor": {
           "can_incremental": false,
-          "details": "Processor ResourceDocumentProcessor cannot support incremental build because the processor doesn't implement ISupportIncrementalDocumentProcessor interface.",
+          "details": "Processor TocDocumentProcessor cannot support incremental build because the processor doesn't implement ISupportIncrementalDocumentProcessor interface.",
           "incrementalPhase": "build"
         }
       }
