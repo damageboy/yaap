@@ -370,7 +370,7 @@ namespace Yaap
 
             _unitName = Settings.UnitName;
             _description = Settings.Description;
-            _useMetricAbbreviations = Settings.UseMetricAbbreviations;
+            _useMetricAbbreviations = Settings.MetricAbbreviations;
             _smoothingFactor = Settings.SmoothingFactor;
 
             _buffer = new StringBuffer(Console.WindowWidth);
@@ -382,7 +382,7 @@ namespace Yaap
                 _selectedBarStyle = YaapBarStyleDefs.Glyphs[(int) Settings.Style];
             }
 
-            if (Settings.UseMetricAbbreviations) {
+            if (Settings.MetricAbbreviations) {
                 var (abbrevTotal, suffix) = GetMetricAbbreviation(total);
                 _progressCountFmt = $"{{0,3}}{{1}}/{abbrevTotal}{suffix}";
                 epilogueLen = "|123K/999K".Length;
