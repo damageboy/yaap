@@ -5,6 +5,7 @@
     <Prefer32Bit>false</Prefer32Bit>
     <LangVersion>latest</LangVersion>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <Deterministic>true</Deterministic>
     <TargetLatestRuntimePatch>true</TargetLatestRuntimePatch>
     <BaseIntermediateOutputPath>$(MSBuildThisFileDirectory).obj\$(MSBuildProjectName)\</BaseIntermediateOutputPath>
     <BaseOutputPath>$(MSBuildThisFileDirectory)build\\$(MSBuildProjectName)\</BaseOutputPath>

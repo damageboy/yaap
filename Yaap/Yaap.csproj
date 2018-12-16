@@ -2,7 +2,6 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <Version>0.6.6</Version>
-    <LangVersion>latest</LangVersion>
     <Authors>Dan Shechter</Authors>
     <Company>Yaap</Company>
     <Description>Yaap - Yet Another ANSI Progress Bar</Description>
@@ -12,7 +11,6 @@
     <PackageProjectUrl>https://github.com/damageboy/yaap</PackageProjectUrl>
     <PackageLicenseUrl>https://raw.githubusercontent.com/damageboy/yaap/master/LICENSE</PackageLicenseUrl>
     <Copyright>Copyright 2018 © Dan Shechter</Copyright>
-    <Deterministic>true</Deterministic>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
