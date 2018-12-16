@@ -26,6 +26,15 @@ namespace Yaap
         static int _totalLinesAddedAfterYaaps;
         static int _isRunning;
 
+        static YaapRegistry()
+        {
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
+                return;
+
+            RedPill();
+            AppDomain.CurrentDomain.ProcessExit += (sender, args) => BluePill();
+        }
+
         static bool IsRunning
         {
             get => _isRunning == 1;
@@ -35,7 +44,6 @@ namespace Yaap
 
         internal static ThreadLocal<Stack<Yaap>> YaapStack =
             new ThreadLocal<Stack<Yaap>>(() => new Stack<Yaap>());
-
 
         internal static void AddInstance(Yaap yaap)
         {
@@ -53,8 +61,6 @@ namespace Yaap
                         return;
                     }
 
-                    if (Environment.OSVersion.Platform == PlatformID.Win32NT)
-                        RedPill();
                     // If we are just starting up the monitoring thread, we've
                     // just potentially red-pilled the windows console, so we can repaint now
                     RepaintSingleYaap(yaap);
@@ -67,7 +73,7 @@ namespace Yaap
                 _monitorThread.Start();
             }
 
-            void RedPill() => Win32Console.EnableVT100Stuffs();
+
         }
 
         internal static void RemoveInstance(Yaap yaap)
@@ -101,11 +107,12 @@ namespace Yaap
                     _totalLinesAddedAfterYaaps = 0;
                 }
                 _monitorThread.Join();
-                if (Environment.OSVersion.Platform == PlatformID.Win32NT)
-                    BluePill();
             }
-            void BluePill() => Win32Console.RestoreTerminalToPristineState();
+
         }
+
+        static void RedPill() => Win32Console.EnableVT100Stuffs();
+        static void BluePill() => Win32Console.RestoreTerminalToPristineState();
 
         static int GetOrSetVerticalPosition(Yaap yaap)
         {
@@ -144,16 +151,16 @@ namespace Yaap
         static void UpdateYaaps()
         {
             const int INTERVAL_MS = 10;
-
+            Console.CursorVisible = false;
             while (IsRunning)
             {
                 foreach (var y in _instances.Values) {
                     if (!y.NeedsRepaint)
                         continue;
-                    Console.CursorVisible = false;
+                    //Console.CursorVisible = false;
                     RepaintSingleYaap(y);
                 }
-                Console.CursorVisible = true;
+                //Console.CursorVisible = true;
                 Thread.Sleep(INTERVAL_MS);
             }
         }
@@ -188,9 +195,32 @@ namespace Yaap
 
         }
 
-        static void ClearEntireLine() => Console.Write(ANSICodes.EraseEntireLine);
-        static void ClearLineToEnd() => Console.Write(ANSICodes.EraseToLineEnd);
-        static void ClearLineToStart() => Console.Write(ANSICodes.EraseToLineStart);
+        internal static void ClearScreen()
+        {
+            lock (_consoleLock) {
+                Console.Write(ANSICodes.ClearScreen);
+            }
+        }
+
+        internal static void ClearEntireLine()
+        {
+            lock (_consoleLock) {
+                Console.Write(ANSICodes.EraseEntireLine);
+            }
+        }
+        internal static void ClearLineToEnd()
+        {
+            lock (_consoleLock) {
+                Console.Write(ANSICodes.EraseToLineEnd);
+            }
+        }
+
+        internal static void ClearLineToStart()
+        {
+            lock (_consoleLock) {
+                Console.Write(ANSICodes.EraseToLineStart);
+            }
+        }
 
         static void MoveTo((int x, int y) oldPos)
         {
@@ -233,9 +263,13 @@ namespace Yaap
         public const string ESC = "\u001B";
         public const string ResetTerminal = ESC + "c";
         public const string CSI = ESC +"[";
+        public const string ClearScreen = CSI + "2J";
         public const string EraseToLineEnd = CSI + "K";
         public const string EraseEntireLine = CSI + "2K";
         public const string EraseToLineStart = CSI + "1K";
+
+        internal static void SetScrollableRegion(int top, int bottom) =>
+            Console.Write($"{CSI}{top};{bottom}r");
     }
 
     /// <summary>
@@ -293,6 +327,29 @@ namespace Yaap
         /// A special or'd value representing all elements of Yaap
         /// </summary>
         All = Description|ProgressPercent|ProgressBar|ProgressCount|Time|Rate,
+    }
+
+    /// <summary>
+    /// An enumeration representing the different positioning/alignment options for a Yaap progress bar(s)
+    /// </summary>
+    public enum YaapPositioning
+    {
+        /// <summary>
+        /// Start displaying the Yaap at the current screen position, but snap it to the
+        /// top of the terminal when it eventually scrolls over there
+        /// </summary>
+        SnapToTop,
+        /// <summary>
+        /// Immediately clear the terminal once the Yaap is displayed, and display the Yaap(s) at the top of the terminal
+        /// while the text scrolls below the Yaap(s)
+        /// </summary>
+        ClearAndAlignToTop,
+        /// <summary>
+        /// Immediately display the Yaap at the bottom of the terminal and allow the text to scroll in the region above
+        /// the Yaap. Note that this might look funky when multiple Yaaps are used dynamically without pre-specifying their
+        /// vertical position in advance...
+        /// </summary>
+        FixToBottom,
     }
 
 
@@ -380,6 +437,12 @@ namespace Yaap
         [PublicAPI]
         public int? VerticalPosition { get; set; }
 
+        /// <summary>
+        /// Specify the <see cref="YaapPositioning"/> for this progress bar. This property control how/where a Yaap
+        /// remains "on" the Terminal in case of scrolling
+        /// </summary>
+        public YaapPositioning Positioning { get; set; }
+
     }
 
     /// <inheritdoc />
@@ -424,7 +487,6 @@ namespace Yaap
                 var vt100IsGo = Win32Console.EnableVT100Stuffs();
                 _unicodeNotWorky = vt100IsGo &&
                     acceptableUnicodeFonts.FirstOrDefault(s => Win32Console.ConsoleFontName.StartsWith(s, StringComparison.InvariantCulture)) == null;
-                Win32Console.RestoreTerminalToPristineState();
             }
 
             if (Environment.OSVersion.Platform == PlatformID.Win32NT)
