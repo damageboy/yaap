@@ -11,7 +11,6 @@ using System.Text;
 using System.Text.Formatting;
 using System.Threading;
 using JetBrains.Annotations;
-using System.Drawing;
 using System.Net.Http.Headers;
 
 namespace Yaap
@@ -29,8 +28,7 @@ namespace Yaap
 
         static YaapRegistry()
         {
-            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
-                return;
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT) return;
 
             RedPill();
             AppDomain.CurrentDomain.ProcessExit += (sender, args) => BluePill();
@@ -54,8 +52,7 @@ namespace Yaap
                 {
                     _instances.Add(GetOrSetVerticalPosition(yaap), yaap);
 
-                    if (IsRunning)
-                    {
+                    if (IsRunning) {
                         // Windows console (in the case we are on windows) has already been red-pilled
                         // So repaint() and byebye
                         RepaintSingleYaap(yaap);
@@ -86,10 +83,12 @@ namespace Yaap
                     // Repaint just before removing for cosmetic purposes:
                     // In case we didn't have a recent update to the progress bar, it might be @ 100%
                     // "in reality" but not visually.... This call will close that gap
-                    if (yaap.Settings.Leave)
+                    if (yaap.Settings.Leave) {
                         RepaintSingleYaap(yaap);
-                    else
+                    }
+                    else {
                         ClearSingleYaap(yaap);
+                    }
 
                     _instances.Remove(yaap.Position);
                     // Unfortunately, we need to mark that we've drawn
@@ -183,12 +182,9 @@ namespace Yaap
             while (IsRunning)
             {
                 foreach (var y in _instances.Values) {
-                    if (!y.NeedsRepaint)
-                        continue;
-                    //Console.CursorVisible = false;
+                    if (!y.NeedsRepaint) continue;
                     RepaintSingleYaap(y);
                 }
-                //Console.CursorVisible = true;
                 Thread.Sleep(INTERVAL_MS);
             }
         }
@@ -213,9 +209,7 @@ namespace Yaap
 
         static void ClearSingleYaap(Yaap yaap)
         {
-            var buffer = yaap.Repaint();
-            lock (_consoleLock)
-            {
+            lock (_consoleLock) {
                 var oldPos = MoveTo(yaap);
                 ClearEntireLine();
                 MoveTo(oldPos);
@@ -276,7 +270,6 @@ namespace Yaap
 
         static (int x, int y) ConsolePosition => (Console.CursorLeft, Console.CursorTop);
 
-
         internal static void Write(string s) { lock (_consoleLock) { Console.Write(s); } }
 
         internal static void WriteLine(string s) {
@@ -294,193 +287,6 @@ namespace Yaap
                     _totalLinesAddedAfterYaaps++;
             }
         }
-
-    }
-
-    internal static class ANSICodes
-    {
-        public const string ESC = "\u001B";
-        public const string ResetTerminal = ESC + "c";
-        public const string CSI = ESC +"[";
-        public const string ClearScreen = CSI + "2J";
-        public const string EraseToLineEnd = CSI + "K";
-        public const string EraseEntireLine = CSI + "2K";
-        public const string EraseToLineStart = CSI + "1K";
-
-        internal static void SetScrollableRegion(int top, int bottom) =>
-            Console.Write($"{CSI}{top};{bottom}r");
-    }
-
-    /// <summary>
-    /// The current state of the <see cref="Yaap"/> instance
-    /// </summary>
-    [PublicAPI]
-    public enum YaapState
-    {
-        /// <summary>
-        /// The yaap instance is running (progressing)
-        /// </summary>
-        Running,
-        /// <summary>
-        /// The yaap instance is paused
-        /// </summary>
-        Paused,
-        /// <summary>
-        /// The yaap instance is stalled
-        /// </summary>
-        Stalled,
-    }
-
-    /// <summary>
-    /// An enumeration representing the various yaap progress bar elements
-    /// </summary>
-    [PublicAPI]
-    [Flags]
-    public enum YaapElement
-    {
-        /// <summary>
-        /// The description prefix visual Yaap element
-        /// </summary>
-        Description = 0x1,
-        /// <summary>
-        /// The numerical percent (e.g. 99%) visual Yaap element
-        /// </summary>
-        ProgressPercent = 0x2,
-        /// <summary>
-        /// The graphical progress bar visual Yaap element
-        /// </summary>
-        ProgressBar = 0x4,
-        /// <summary>
-        /// The progress count (e.g. 199/200) visual Yaap elements
-        /// </summary>
-        ProgressCount = 0x8,
-        /// <summary>
-        /// The elapsed/total time visual Yaap elements
-        /// </summary>
-        Time = 0x10,
-        /// <summary>
-        /// The rate visual Yaap element
-        /// </summary>
-        Rate = 0x20,
-        /// <summary>
-        /// A special or'd value representing all elements of Yaap
-        /// </summary>
-        All = Description|ProgressPercent|ProgressBar|ProgressCount|Time|Rate,
-    }
-
-    /// <summary>
-    /// An enumeration representing the different positioning/alignment options for a Yaap progress bar(s)
-    /// </summary>
-    public enum YaapPositioning
-    {
-        /// <summary>
-        /// Start displaying the Yaap at the current screen position, but snap it to the
-        /// top of the terminal when it eventually scrolls over there
-        /// </summary>
-        FlowAndSnapToTop,
-        /// <summary>
-        /// Immediately clear the terminal once the Yaap is displayed, and display the Yaap(s) at the top of the terminal
-        /// while the text scrolls below the Yaap(s)
-        /// </summary>
-        ClearAndAlignToTop,
-        /// <summary>
-        /// Immediately display the Yaap at the bottom of the terminal and allow the text to scroll in the region above
-        /// the Yaap. Note that this might look funky when multiple Yaaps are used dynamically without pre-specifying their
-        /// vertical position in advance...
-        /// </summary>
-        FixToBottom,
-    }
-
-
-    /// <summary>
-    /// Yaap visual settings, used when constructing a <see cref="Yaap"/> object
-    /// </summary>
-    public class YaapSettings
-    {
-        /// <summary>
-        /// Specifies a prefix for the progress bar text that should be used to uniquely identify the progress bar
-        /// meaning/content to the user.
-        /// </summary>
-        [PublicAPI]
-        public string Description { get; set; }
-
-        /// <summary>
-        /// A flags or'd value specifying which visual elements will be presented to the user
-        /// </summary>
-        [PublicAPI]
-        public YaapElement Elements { get; set; } = YaapElement.All;
-
-        /// <summary>
-        /// A <see cref="YaapColorScheme"/> instance representing the desired color scheme for Yaap
-        /// </summary>
-        [PublicAPI]
-        public YaapColorScheme ColorScheme { get; set; } = YaapColorScheme.NoColor;
-
-        /// <summary>
-        /// Use only ASCII charchters (notably the '#' charchter as the progress bar 'progress' glyph
-        /// </summary>
-        [PublicAPI]
-        public bool UseASCII { get; set; }
-
-        /// <summary>
-        /// The select visual style for the progress bar, only taken into account when <see cref="UseASCII"/> is set to false (which is the default)
-        /// and the underlying terminal supports unicode properly
-        /// </summary>
-        [PublicAPI]
-        public YaapBarStyle Style { get; set; }
-
-        /// <summary>
-        /// Constrain the prgoress bar to a specific width, when not specified, the progress bar will take up
-        /// the width of the terminal. If not set, the progress bar will resize dynamically as the windows changes size
-        /// <remarks>Can be set to <see cref="Console.WindowWidth"/> in case the user wishes to constrain the progress bar to the current windows width, or any other width for that matter.</remarks>
-        /// </summary>
-        [PublicAPI]
-        public int? Width { get; set; }
-
-        /// <summary>
-        /// Exponential moving average smoothing factor for speed estimates. Ranges from 0 (average speed) to 1 (current/instantaneous speed) [default: 0.3].
-        /// </summary>
-        [PublicAPI]
-        public double SmoothingFactor { get; set; }
-
-        /// <summary>
-        /// used to name the unit unit of progress. [default: 'it']
-        /// </summary>
-        [PublicAPI]
-        public string UnitName { get; set; } = "it";
-
-        /// <summary>
-        /// If set, will be used to scale the <see cref="Yaap.Progress"/> and <see cref="Yaap.Total"/> values, using
-        /// the International System of Units standard. (kilo, mega, etc.)
-        /// </summary>
-        [PublicAPI]
-        public bool UseMetricAbbreviations { get; set; }
-
-        /// <summary>
-        /// If set, and <see cref="UseMetricAbbreviations"/> is set to false, will be used to scale the
-        /// <see cref="Yaap.Progress"/> and <see cref="Yaap.Total"/> values
-        /// </summary>
-        [PublicAPI]
-        public double? UnitScale { get; set; }
-
-        /// <summary>
-        /// Leave the progress bar visually on screen once it is done/closed
-        /// </summary>
-        [PublicAPI]
-        public bool Leave { get; set; } = true;
-
-        /// <summary>
-        /// Specify the line offset to print this bar (starting from 0). Automatic when unspecified.
-        /// Useful to manage multiple bars at once (eg, from multiple threads).
-        /// </summary>
-        [PublicAPI]
-        public int? VerticalPosition { get; set; }
-
-        /// <summary>
-        /// Specify the <see cref="YaapPositioning"/> for this progress bar. This property control how/where a Yaap
-        /// remains "on" the Terminal in case of scrolling
-        /// </summary>
-        public YaapPositioning Positioning { get; set; }
 
     }
 
@@ -528,10 +334,12 @@ namespace Yaap
                     acceptableUnicodeFonts.FirstOrDefault(s => Win32Console.ConsoleFontName.StartsWith(s, StringComparison.InvariantCulture)) == null;
             }
 
-            if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+            if (Environment.OSVersion.Platform == PlatformID.Win32NT) {
                 DoUnspeakableThingsOnWindows();
-            else
+            }
+            else {
                 _unicodeNotWorky = !(Console.OutputEncoding is UTF8Encoding);
+            }
         }
 
         /// <summary>
@@ -544,11 +352,13 @@ namespace Yaap
         public Yaap(long total, long initialProgress = 0, YaapSettings settings = null)
         {
             int epilogueLen;
-            if (total < 0)
+            if (total < 0) {
                 throw new ArgumentOutOfRangeException(nameof(total), "cannot be negative");
+            }
 
-            if (initialProgress < 0)
+            if (initialProgress < 0) {
                 throw new ArgumentOutOfRangeException(nameof(initialProgress), "cannot be negative");
+            }
 
             Settings = settings ?? new YaapSettings();
             Total = total;
@@ -561,10 +371,12 @@ namespace Yaap
 
             _buffer = new StringBuffer(Console.WindowWidth);
 
-            if (Settings.UseASCII || _unicodeNotWorky)
+            if (Settings.UseASCII || _unicodeNotWorky) {
                 _selectedBarStyle = _asciiBarStyle;
-            else
-                _selectedBarStyle = YaapBarStyleDefs.Glyphs[(int)Settings.Style];
+            }
+            else {
+                _selectedBarStyle = YaapBarStyleDefs.Glyphs[(int) Settings.Style];
+            }
 
             if (Settings.UseMetricAbbreviations) {
                 var (abbrevTotal, suffix) = GetMetricAbbreviation(total);
@@ -590,8 +402,9 @@ namespace Yaap
             _maxGlyphWidth = capturedWidth - prologueCount - epilogueLen;
 
             _repaintProgressIncrement = (double) Total / (_maxGlyphWidth * _selectedBarStyle.Length);
-            if (_repaintProgressIncrement == 0)
+            if (_repaintProgressIncrement == 0) {
                 _repaintProgressIncrement = 1;
+            }
 
             _nextRepaintProgress =
                 Progress / _repaintProgressIncrement * _repaintProgressIncrement +
@@ -606,8 +419,9 @@ namespace Yaap
 
             YaapRegistry.AddInstance(this);
 
-            if (Parent != null)
+            if (Parent != null) {
                 Parent.Child = this;
+            }
 
             YaapRegistry.YaapStack.Value.Push(this);
         }
@@ -796,27 +610,42 @@ namespace Yaap
             _buffer.Append('\r');
             _buffer.Append(ANSICodes.EraseToLineEnd);
 
-            if (ShouldShoveDescription)
+            if (ShouldShoveDescription) {
                 ShoveDescription();
-            if (ShouldShoveProgressPercent)
+            }
+
+            if (ShouldShoveProgressPercent) {
                 ShoveProgressPercentage();
-            if (ShouldShoveProgressBar)
+            }
+
+            if (ShouldShoveProgressBar) {
                 ShoveProgressBar();
-            if (ShouldShoveProgressCount)
+            }
+
+            if (ShouldShoveProgressCount) {
                 ShoveProgressTotals();
+            }
+
             _buffer.Append(' ');
             //[{{0}}<{{1}}, {{2}}{unitName}/s]
 
             // At least one of Time|Rate is turned on?
-            if ((Settings.Elements & (YaapElement.Rate | YaapElement.Time)) != 0)
+            if ((Settings.Elements & (YaapElement.Rate | YaapElement.Time)) != 0) {
                 _buffer.Append('[');
+            }
+
             ShoveTime();
-            if (ShouldShoveTime)
-            _buffer.Append(", ");
-            if (ShouldShoveRate)
+            if (ShouldShoveTime) {
+                _buffer.Append(", ");
+            }
+
+            if (ShouldShoveRate) {
                 ShoveRate();
-            if ((Settings.Elements & (YaapElement.Rate | YaapElement.Time)) != 0)
+            }
+
+            if ((Settings.Elements & (YaapElement.Rate | YaapElement.Time)) != 0) {
                 _buffer.Append(']');
+            }
 
             _buffer.Append(ANSICodes.EraseToLineEnd);
 
@@ -831,10 +660,10 @@ namespace Yaap
                 // the last rate update since the previous rate and smooth it out using EMA/SmoothingFactor
                 double rate;
                 const double TOLERANCE = 1e-6;
-                if (Math.Abs(_smoothingFactor) < TOLERANCE)
+                if (Math.Abs(_smoothingFactor) < TOLERANCE) {
                     rate = ((double) progress * Stopwatch.Frequency) / elapsedTicks;
-                else
-                {
+                }
+                else {
                     var dProgress = progress - _lastProgress;
                     var dTicks = elapsedTicks - _lastRepaintTicks;
 
@@ -904,8 +733,9 @@ namespace Yaap
                     _buffer.Append(_selectedBarStyle[_selectedBarStyle.Length - 1], completeBlocks);
                     var lastCharIdx = (int)(blocks % _selectedBarStyle.Length);
 
-                    if (lastCharIdx == 0)
+                    if (lastCharIdx == 0) {
                         return completeBlocks;
+                    }
 
                     _buffer.Append(_selectedBarStyle[lastCharIdx]);
                     return completeBlocks + 1;
@@ -916,13 +746,13 @@ namespace Yaap
             void ShoveProgressTotals()
             {
                 ChangeColor(cs.ProgressCountColor);
-                if (_useMetricAbbreviations)
-                {
+                if (_useMetricAbbreviations) {
                     var (abbrevNum, suffix) = GetMetricAbbreviation(Progress);
                     _buffer.AppendFormat(_progressCountFmt, abbrevNum, suffix);
                 }
-                else
+                else {
                     _buffer.AppendFormat(_progressCountFmt, Progress);
+                }
 
                 ResetColor();
             }
@@ -938,8 +768,7 @@ namespace Yaap
             void ShoveRate()
             {
                 ChangeColor(cs.RateColor);
-                if (_useMetricAbbreviations)
-                {
+                if (_useMetricAbbreviations) {
                     var (abbrevNum, suffix) = GetMetricAbbreviation(_rate);
                     if (abbrevNum < 100)
                         _buffer.AppendFormat("{0:F2}{1}{2}/s", abbrevNum, suffix, _unitName);
@@ -981,8 +810,7 @@ namespace Yaap
             {
                 // Print days formatting
             }
-            else if (ehours + rhours > 0)
-            {
+            else if (ehours + rhours > 0) {
                 if (elapsed == TimeSpan.MaxValue)
                     buffer.Append("--:--?<");
                 else
@@ -992,8 +820,7 @@ namespace Yaap
                 else
                     buffer.AppendFormat("{0:D2}:{1:D2}m", rhours, rminutes);
             }
-            else
-            {
+            else {
                 if (elapsed == TimeSpan.MaxValue)
                     buffer.Append("--:--?<");
                 else
@@ -1124,8 +951,7 @@ namespace Yaap
 
         public static void Deconstruct(this TimeSpan timeSpan, out int days, out int hours, out int minutes, out int seconds, out int ticks)
         {
-            if (timeSpan == TimeSpan.MaxValue)
-            {
+            if (timeSpan == TimeSpan.MaxValue) {
                 days = hours = minutes = seconds = ticks = 0;
                 return;
             }
@@ -1135,17 +961,6 @@ namespace Yaap
             minutes = (int)((t / TicksPerMinute) % 60);
             seconds = (int)((t / TicksPerSecond) % 60);
             ticks = (int)(t % 10_000_000);
-        }
-    }
-
-    static class ColorDeconstruction
-    {
-        public static void Deconstruct(this Color color, out int r, out int g, out int b, out int a)
-        {
-            r = color.R;
-            g = color.G;
-            b = color.B;
-            a = color.A;
         }
     }
 }
