@@ -9,8 +9,6 @@ namespace Yaap.Tests
         [Test]
         public static void IIListProviderExists()
         {
-            //var iilp = typeof(Enumerable).Assembly.GetTypes().Single(t => t.Name.Contains("IIListProvider"));
-
             var iilp = typeof(Enumerable).Assembly.GetType("System.Linq.IIListProvider`1");
 
             Assert.That(iilp.IsGenericTypeDefinition, Is.True);

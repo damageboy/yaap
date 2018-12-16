@@ -145,10 +145,10 @@ namespace Yaap
         /// the International System of Units standard. (kilo, mega, etc.)
         /// </summary>
         [PublicAPI]
-        public bool UseMetricAbbreviations { get; set; }
+        public bool MetricAbbreviations { get; set; }
 
         /// <summary>
-        /// If set, and <see cref="UseMetricAbbreviations"/> is set to false, will be used to scale the
+        /// If set, and <see cref="MetricAbbreviations"/> is set to false, will be used to scale the
         /// <see cref="Yaap.Progress"/> and <see cref="Yaap.Total"/> values
         /// </summary>
         [PublicAPI]

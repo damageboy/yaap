@@ -101,7 +101,7 @@ namespace Demo
             WriteLine();
 
             foreach (var i in Range(0, 200).Yaap(settings: new YaapSettings
-                {Description = "smoothing", SmoothingFactor = 0.1, UseMetricAbbreviations = true}))
+                {Description = "smoothing", SmoothingFactor = 0.1, MetricAbbreviations = true}))
                 Thread.Sleep(i / 2);
         }
 
@@ -111,13 +111,13 @@ namespace Demo
             WriteLine("These bars also use metric abbreviation(s) for the progress/rate/total counts");
             WriteLine();
 
-            foreach (var i in Range(0, 3).Yaap(settings: new YaapSettings
-                {Description = "nested1", UseMetricAbbreviations = true}))
-            foreach (var j in Range(0, 10).Yaap(settings: new YaapSettings
-                {Description = "nested2", UseMetricAbbreviations = true}))
-            foreach (var k in Range(0, 100_000_000)
-                .Yaap(settings: new YaapSettings {Description = "nested3", UseMetricAbbreviations = true}))
-                ;
+            foreach (var i in Range(0, 3).Yaap(settings: new YaapSettings { Description = "nested1", MetricAbbreviations = true})) {
+                foreach (var j in Range(0, 10).Yaap(settings: new YaapSettings { Description = "nested2", MetricAbbreviations = true})) {
+                    foreach (var k in Range(0, 100_000_000).Yaap(settings: new YaapSettings { Description = "nested3", MetricAbbreviations = true})) {
+                        ;
+                    }
+                }
+            }
         }
 
         static void Demo6()
@@ -134,14 +134,22 @@ namespace Demo
                 var y = Range(0, 200).Yaap(settings: new YaapSettings {Description = $"thread{ti}", VerticalPosition = ti});
                 allReady.Release();
                 mre.WaitOne();
-                foreach (var i in y)
+                foreach (var i in y) {
                     Thread.Sleep(r.Next(90, 110) / (ti + 1));
+                }
             })).ToList();
 
-            foreach (var t in threads) t.Start();
-            foreach (var t in threads) allReady.WaitOne();
+            foreach (var t in threads) {
+                t.Start();
+            }
+
+            foreach (var t in threads) {
+                allReady.WaitOne();
+            }
             mre.Set();
-            foreach (var t in threads) t.Join();
+            foreach (var t in threads) {
+                t.Join();
+            }
         }
 
         static void Demo7()
