@@ -46,7 +46,7 @@ namespace Yaap
         /// <summary>
         /// The "no-color" color scheme for Yaap
         /// </summary>
-        public static YaapColorScheme NoColor = new YaapColorScheme()
+        public static readonly YaapColorScheme NoColor = new YaapColorScheme
         {
             ProgressBarColor     = TerminalColor.None,
             ProgressPercentColor = TerminalColor.None,
@@ -55,7 +55,7 @@ namespace Yaap
         /// <summary>
         /// The Bright Yaap color scheme for Yaap
         /// </summary>
-        public static YaapColorScheme Bright = new YaapColorScheme()
+        public static readonly YaapColorScheme Bright = new YaapColorScheme
         {
             ProgressBarColor         = TerminalColor.FromConsoleColor(ANSIColor.BrightGreen),
             ProgressBarPausedColor   = TerminalColor.FromConsoleColor(ANSIColor.BrightYellow),
@@ -69,7 +69,7 @@ namespace Yaap
         /// <summary>
         /// The Bright Yaap color scheme for Yaap
         /// </summary>
-        public static YaapColorScheme Dark = new YaapColorScheme()
+        public static readonly YaapColorScheme Dark = new YaapColorScheme
         {
             ProgressBarColor         = TerminalColor.FromConsoleColor(ANSIColor.Green),
             ProgressBarPausedColor   = TerminalColor.FromConsoleColor(ANSIColor.Yellow),
