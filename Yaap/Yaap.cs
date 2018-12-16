@@ -28,7 +28,9 @@ namespace Yaap
 
         static YaapRegistry()
         {
-            if (Environment.OSVersion.Platform != PlatformID.Win32NT) return;
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT) {
+                return;
+            }
 
             RedPill();
             AppDomain.CurrentDomain.ProcessExit += (sender, args) => BluePill();
@@ -70,8 +72,6 @@ namespace Yaap
                 _monitorThread = new Thread(UpdateYaaps) { Name = nameof(UpdateYaaps) };
                 _monitorThread.Start();
             }
-
-
         }
 
         internal static void RemoveInstance(Yaap yaap)
@@ -108,7 +108,6 @@ namespace Yaap
                 }
                 _monitorThread.Join();
             }
-
         }
 
         static void RedPill() => Win32Console.EnableVT100Stuffs();
@@ -164,7 +163,6 @@ namespace Yaap
                 ANSICodes.SetScrollableRegion(0, Console.WindowHeight - 10);
                 return yaap.Position = Console.WindowHeight;
             }
-
         }
 
         static void OnCancelKeyPress(object sender, ConsoleCancelEventArgs e)
@@ -182,7 +180,9 @@ namespace Yaap
             while (IsRunning)
             {
                 foreach (var y in _instances.Values) {
-                    if (!y.NeedsRepaint) continue;
+                    if (!y.NeedsRepaint) {
+                        continue;
+                    }
                     RepaintSingleYaap(y);
                 }
                 Thread.Sleep(INTERVAL_MS);
@@ -198,8 +198,10 @@ namespace Yaap
             lock (_consoleLock) {
                 // We may have been already disposed while awaiting to be repainted...
                 // (Yes, this actually happenned...)
-                if (yaap.IsDisposed)
+                if (yaap.IsDisposed) {
                     return;
+                }
+
                 buffer.CopyTo(0, _chars, 0, buffer.Count);
                 var oldPos = MoveTo(yaap);
                 Console.Write(_chars, 0, buffer.Count);
@@ -297,6 +299,8 @@ namespace Yaap
     /// </summary>
     public class Yaap : IDisposable
     {
+        const double TOLERANCE = 1e-6;
+
         static bool _unicodeNotWorky;
         static readonly char[] _asciiBarStyle = { '#' };
         readonly char[] _selectedBarStyle;
@@ -394,15 +398,16 @@ namespace Yaap
             epilogueLen += EPILOGUE_SAMPLE.Length + Settings.UnitName.Length;
 
             var capturedWidth = Console.WindowWidth - 2;
-            if (Settings.Width.HasValue && Settings.Width.Value < capturedWidth)
+            if (Settings.Width.HasValue && Settings.Width.Value < capturedWidth) {
                 capturedWidth = Settings.Width.Value;
+            }
 
             var prologueCount = (string.IsNullOrWhiteSpace(Settings.Description) ? 0 : Settings.Description.Length) + 7;
 
             _maxGlyphWidth = capturedWidth - prologueCount - epilogueLen;
 
             _repaintProgressIncrement = (double) Total / (_maxGlyphWidth * _selectedBarStyle.Length);
-            if (_repaintProgressIncrement == 0) {
+            if (Math.Abs(_repaintProgressIncrement) < TOLERANCE) {
                 _repaintProgressIncrement = 1;
             }
 
@@ -500,8 +505,10 @@ namespace Yaap
         {
             get => _state;
             set {
-                if (_state == value)
+                if (_state == value) {
                     return;
+                }
+
                 _state = value;
                 ForceRepaint = true;
             }
@@ -514,8 +521,10 @@ namespace Yaap
         static (long num, string abbrev) GetMetricAbbreviation(long num)
         {
             for (var i = 0; i < _metricUnits.Length; i++) {
-                if (num < 1000)
+                if (num < 1000) {
                     return (num, _metricUnits[i]);
+                }
+
                 num /= 1000;
             }
             throw new ArgumentOutOfRangeException(nameof(num), "is too large");
@@ -525,8 +534,10 @@ namespace Yaap
         {
             // ReSharper disable once ForCanBeConvertedToForeach
             for (var i = 0; i < _metricUnits.Length; i++) {
-                if (num < 1000)
+                if (num < 1000) {
                     return (num, _metricUnits[i]);
+                }
+
                 num /= 1000;
             }
 
@@ -659,7 +670,6 @@ namespace Yaap
                 // we just use the whole thing for the progress calc, otherwise we continuously sample
                 // the last rate update since the previous rate and smooth it out using EMA/SmoothingFactor
                 double rate;
-                const double TOLERANCE = 1e-6;
                 if (Math.Abs(_smoothingFactor) < TOLERANCE) {
                     rate = ((double) progress * Stopwatch.Frequency) / elapsedTicks;
                 }
@@ -681,7 +691,9 @@ namespace Yaap
 
             void ShoveDescription()
             {
-                if (string.IsNullOrWhiteSpace(_description)) return;
+                if (string.IsNullOrWhiteSpace(_description)) {
+                    return;
+                }
                 _buffer.Append(_description);
                 _buffer.Append(": ");
             }
@@ -821,14 +833,19 @@ namespace Yaap
                     buffer.AppendFormat("{0:D2}:{1:D2}m", rhours, rminutes);
             }
             else {
-                if (elapsed == TimeSpan.MaxValue)
+                if (elapsed == TimeSpan.MaxValue) {
                     buffer.Append("--:--?<");
-                else
+                }
+                else {
                     buffer.AppendFormat("{0:D2}:{1:D2}s<", eminutes, eseconds);
-                if (remaining == TimeSpan.MaxValue)
+                }
+
+                if (remaining == TimeSpan.MaxValue) {
                     buffer.Append("--:--?");
-                else
+                }
+                else {
                     buffer.AppendFormat("{0:D2}:{1:D2}s", rminutes, rseconds);
+                }
             }
         }
     }
