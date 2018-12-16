@@ -12,6 +12,7 @@ using System.Text.Formatting;
 using System.Threading;
 using JetBrains.Annotations;
 using System.Drawing;
+using System.Net.Http.Headers;
 
 namespace Yaap
 {
@@ -116,28 +117,55 @@ namespace Yaap
 
         static int GetOrSetVerticalPosition(Yaap yaap)
         {
-            if (yaap.Settings.VerticalPosition.HasValue)
-                yaap.Position = yaap.Settings.VerticalPosition.Value;
-            else {
-                var lastPos = -1;
-                foreach (var p in _instances.Keys) {
-                    if (p > lastPos + 1)
-                        return yaap.Position = lastPos + 1;
-                    lastPos = p;
-                }
-
-                yaap.Position = ++lastPos;
+            switch (yaap.Settings.Positioning) {
+                case YaapPositioning.FlowAndSnapToTop:
+                    return FlowAndSnapToTop();
+                case YaapPositioning.ClearAndAlignToTop:
+                    return ClearAndAlignToTop();
+                case YaapPositioning.FixToBottom:
+                    return FixToBottom();
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
 
-            if (_maxYaapPosition > yaap.Position)
-                return yaap.Position;
+            int FlowAndSnapToTop()
+            {
+                if (yaap.Settings.VerticalPosition.HasValue)
+                    yaap.Position = yaap.Settings.VerticalPosition.Value;
+                else {
+                    var lastPos = -1;
+                    foreach (var p in _instances.Keys) {
+                        if (p > lastPos + 1)
+                            return yaap.Position = lastPos + 1;
+                        lastPos = p;
+                    }
 
-            // This progress bar is taking up one more line
-            // than we previously accounted for, so bump the total line count + \n
-            for (var l = _maxYaapPosition; l < yaap.Position + 1; l++)
-                Console.WriteLine();
-            _maxYaapPosition = yaap.Position + 1;
-            return yaap.Position;
+                    yaap.Position = ++lastPos;
+                }
+
+                if (_maxYaapPosition > yaap.Position)
+                    return yaap.Position;
+
+                // This progress bar is taking up one more line
+                // than we previously accounted for, so bump the total line count + \n
+                for (var l = _maxYaapPosition; l < yaap.Position + 1; l++)
+                    Console.WriteLine();
+                _maxYaapPosition = yaap.Position + 1;
+                return yaap.Position;
+            }
+
+            int ClearAndAlignToTop()
+            {
+                ANSICodes.SetScrollableRegion(1, Console.WindowHeight);
+                return yaap.Position = 0;
+            }
+
+            int FixToBottom()
+            {
+                ANSICodes.SetScrollableRegion(0, Console.WindowHeight - 10);
+                return yaap.Position = Console.WindowHeight;
+            }
+
         }
 
         static void OnCancelKeyPress(object sender, ConsoleCancelEventArgs e)
@@ -231,8 +259,19 @@ namespace Yaap
         static (int x, int y) MoveTo(Yaap yaap)
         {
             var (x, y) = ConsolePosition;
-            Console.CursorTop = y - (_maxYaapPosition - yaap.Position + _totalLinesAddedAfterYaaps);
+            switch (yaap.Settings.Positioning) {
+                case YaapPositioning.FlowAndSnapToTop:
+                    Console.CursorTop = Math.Max(0, y - (_maxYaapPosition - yaap.Position + _totalLinesAddedAfterYaaps));
+                    break;
+                case YaapPositioning.ClearAndAlignToTop:
+                case YaapPositioning.FixToBottom:
+                    Console.CursorTop = yaap.Position;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
             return (x, y);
+
         }
 
         static (int x, int y) ConsolePosition => (Console.CursorLeft, Console.CursorTop);
@@ -338,7 +377,7 @@ namespace Yaap
         /// Start displaying the Yaap at the current screen position, but snap it to the
         /// top of the terminal when it eventually scrolls over there
         /// </summary>
-        SnapToTop,
+        FlowAndSnapToTop,
         /// <summary>
         /// Immediately clear the terminal once the Yaap is displayed, and display the Yaap(s) at the top of the terminal
         /// while the text scrolls below the Yaap(s)
@@ -707,10 +746,6 @@ namespace Yaap
 
                 if (_lastRepaintTicks + updateSpan < swElapsedTicks)
                     return true;
-
-
-                if (Parent == null)
-                    Debugger.Break();
 
                 if ((Progress + NestedProgress)>= _nextRepaintProgress) {
                     _nextRepaintProgress += _repaintProgressIncrement;

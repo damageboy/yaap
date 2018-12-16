@@ -17,67 +17,50 @@ namespace Demo
 
         static void Main(string[] args)
         {
-            var demos = new Action[] {Demo1, Demo2, Demo3, Demo4, Demo5, Demo6};
+            var demos = new Action[] {Demo1, Demo2, Demo3, Demo4, Demo5, Demo6, Demo7};
             var startDemo = args.Length > 0
                 ? (int.TryParse(args[0], out var tmp) ? tmp : 1)
                 : 1;
             var lastDemo = args.Length > 0 ? startDemo + 1 : demos.Length;
 
-            for (var i = startDemo; i < lastDemo; i++) {
-                ClearScreen();
+            for (var i = startDemo - 1; i < lastDemo; i++) {
                 ResetCursor();
+                ClearScreen();
                 demos[i]();
             }
         }
 
-        static void Demo6()
+        static void Demo1()
         {
-            WriteLine("You can also launch multiple threads and have them progress independently");
-            WriteLine("While still updating the progress bars in a coherent way...");
+            WriteLine("Here's a plain vanilla progress bar (_can_ be with nice smooth unicode even on windows*)");
+            WriteLine("It's width is constrainted to 100 charchters in total");
+            WriteLine("* for more on Windows, go to http://xxxxx");
             WriteLine();
 
-            var mre = new ManualResetEvent(false);
-            var allReady = new Semaphore(0, 10);
-
-            var threads = Range(0, 10).Select(ti => new Thread(() => {
-                var r = new Random((int) (DateTime.Now.Ticks % int.MaxValue));
-                var y = Range(0, 200).Yaap(settings: new YaapSettings {Description = $"thread{ti}", VerticalPosition = ti});
-                allReady.Release();
-                mre.WaitOne();
-                foreach (var i in y)
-                    Thread.Sleep(r.Next(90, 110) / (ti + 1));
-            })).ToList();
-
-            foreach (var t in threads) t.Start();
-            foreach (var t in threads) allReady.WaitOne();
-            mre.Set();
-            foreach (var t in threads) t.Join();
+            foreach (var i in Range(0, 200).Yaap(settings: new YaapSettings {Description = "regular", Width = 100})) {
+                Thread.Sleep(100);
+                switch (i) {
+                    case 50:
+                        WriteLine("The (re)drawing of the progress bar, happens in the background");
+                        break;
+                    case 100:
+                        Write("As long as you use YaapConsole.Write* methods....");
+                        break;
+                    case 150:
+                        WriteLine(" ... you can continue writing to the terminal");
+                        break;
+                }
+            }
         }
 
-        static void Demo5()
+        static void Demo2()
         {
-            WriteLine("You can even have nested loops, each with its own progress bar");
-            WriteLine("These bars also use metric abbreviation(s) for the progress/rate/total counts");
-            WriteLine();
-
-            foreach (var i in Range(0, 3).Yaap(settings: new YaapSettings
-                {Description = "nested1", UseMetricAbbreviations = true}))
-            foreach (var j in Range(0, 10).Yaap(settings: new YaapSettings
-                {Description = "nested2", UseMetricAbbreviations = true}))
-            foreach (var k in Range(0, 100_000_000)
-                .Yaap(settings: new YaapSettings {Description = "nested3", UseMetricAbbreviations = true}))
-                ;
-        }
-
-        static void Demo4()
-        {
-            WriteLine("Here's a progress bar that adapts to the width of the terminal");
-            WriteLine("It's pre-configured to slow down, and the rate/time estimation uses EMA to adapt more quickly");
+            WriteLine("Here's the same demo as before, but this time with colors");
             WriteLine();
 
             foreach (var i in Range(0, 200).Yaap(settings: new YaapSettings
-                {Description = "smoothing", SmoothingFactor = 0.1, UseMetricAbbreviations = true}))
-                Thread.Sleep(i / 2);
+                {Description = "regular", Width = 100, ColorScheme = YaapColorScheme.Bright}))
+                Thread.Sleep(100);
         }
 
         static void Demo3()
@@ -111,36 +94,63 @@ namespace Demo
             }
         }
 
-        static void Demo2()
+        static void Demo4()
         {
-            WriteLine("Here's the same demo as before, but this time with colors");
+            WriteLine("Here's a progress bar that adapts to the width of the terminal");
+            WriteLine("It's pre-configured to slow down, and the rate/time estimation uses EMA to adapt more quickly");
             WriteLine();
 
             foreach (var i in Range(0, 200).Yaap(settings: new YaapSettings
-                {Description = "regular", Width = 100, ColorScheme = YaapColorScheme.Bright}))
-                Thread.Sleep(100);
+                {Description = "smoothing", SmoothingFactor = 0.1, UseMetricAbbreviations = true}))
+                Thread.Sleep(i / 2);
         }
 
-        static void Demo1()
+        static void Demo5()
         {
-            WriteLine("Here's a plain vanilla progress bar (_can_ be with nice smooth unicode even on windows*)");
-            WriteLine("It's width is constrainted to 100 charchters in total");
-            WriteLine("* for more on Windows, go to http://xxxxx");
+            WriteLine("You can even have nested loops, each with its own progress bar");
+            WriteLine("These bars also use metric abbreviation(s) for the progress/rate/total counts");
             WriteLine();
 
-            foreach (var i in Range(0, 200).Yaap(settings: new YaapSettings {Description = "regular", Width = 100})) {
+            foreach (var i in Range(0, 3).Yaap(settings: new YaapSettings
+                {Description = "nested1", UseMetricAbbreviations = true}))
+            foreach (var j in Range(0, 10).Yaap(settings: new YaapSettings
+                {Description = "nested2", UseMetricAbbreviations = true}))
+            foreach (var k in Range(0, 100_000_000)
+                .Yaap(settings: new YaapSettings {Description = "nested3", UseMetricAbbreviations = true}))
+                ;
+        }
+
+        static void Demo6()
+        {
+            WriteLine("You can also launch multiple threads and have them progress independently");
+            WriteLine("While still updating the progress bars in a coherent way...");
+            WriteLine();
+
+            var mre = new ManualResetEvent(false);
+            var allReady = new Semaphore(0, 10);
+
+            var threads = Range(0, 10).Select(ti => new Thread(() => {
+                var r = new Random((int) (DateTime.Now.Ticks % int.MaxValue));
+                var y = Range(0, 200).Yaap(settings: new YaapSettings {Description = $"thread{ti}", VerticalPosition = ti});
+                allReady.Release();
+                mre.WaitOne();
+                foreach (var i in y)
+                    Thread.Sleep(r.Next(90, 110) / (ti + 1));
+            })).ToList();
+
+            foreach (var t in threads) t.Start();
+            foreach (var t in threads) allReady.WaitOne();
+            mre.Set();
+            foreach (var t in threads) t.Join();
+        }
+
+        static void Demo7()
+        {
+            foreach (var i in Range(0, 200).Yaap(settings: new YaapSettings {
+                Description = "regular", Width = 100, Positioning = YaapPositioning.FixToBottom
+            })) {
                 Thread.Sleep(100);
-                switch (i) {
-                    case 50:
-                        WriteLine("The (re)drawing of the progress bar, happens in the background");
-                        break;
-                    case 100:
-                        Write("As long as you use YaapConsole.Write* methods....");
-                        break;
-                    case 150:
-                        WriteLine(" ... you can continue writing to the terminal");
-                        break;
-                }
+                WriteLine($"Scrolling is fun! ({i}/200)");
             }
         }
     }
