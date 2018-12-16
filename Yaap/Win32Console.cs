@@ -45,16 +45,16 @@ namespace Yaap
         static extern bool GetCurrentConsoleFontEx(IntPtr hConsoleOutput, bool bMaximumWindow, [In, Out] CONSOLE_FONT_INFOEX lpConsoleCurrentFont);
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
-        public class CONSOLE_FONT_INFOEX
+        internal class CONSOLE_FONT_INFOEX
         {
-            int cbSize = Marshal.SizeOf(typeof(CONSOLE_FONT_INFOEX));
-            public int FontIndex;
-            public short FontWidth;
-            public short FontHeight;
-            public int FontFamily;
-            public int FontWeight;
+            readonly int cbSize = Marshal.SizeOf(typeof(CONSOLE_FONT_INFOEX));
+            internal  int FontIndex;
+            internal  short FontWidth;
+            internal  short FontHeight;
+            internal  int FontFamily;
+            internal  int FontWeight;
             [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)]
-            public string FaceName;
+            internal  string FaceName;
         }
 
 

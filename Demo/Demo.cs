@@ -21,7 +21,7 @@ namespace Demo
             var startDemo = args.Length > 0
                 ? (int.TryParse(args[0], out var tmp) ? tmp : 1)
                 : 1;
-            var lastDemo = args.Length > 0 ? startDemo + 1 : demos.Length;
+            var lastDemo = args.Length > 0 ? startDemo : demos.Length;
 
             for (var i = startDemo - 1; i < lastDemo; i++) {
                 ResetCursor();
@@ -33,7 +33,7 @@ namespace Demo
         static void Demo1()
         {
             WriteLine("Here's a plain vanilla progress bar (_can_ be with nice smooth unicode even on windows*)");
-            WriteLine("It's width is constrainted to 100 charchters in total");
+            WriteLine("It's width is constrained to 100 characters in total");
             WriteLine("* for more on Windows, go to http://xxxxx");
             WriteLine();
 
