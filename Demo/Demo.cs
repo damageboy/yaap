@@ -155,7 +155,9 @@ namespace Demo
         static void Demo7()
         {
             foreach (var i in Range(0, 200).Yaap(settings: new YaapSettings {
-                Description = "regular", Width = 100, Positioning = YaapPositioning.FixToBottom
+                Description = "regular", Width = 100,
+                Positioning = YaapPositioning.FixToBottom,
+                DisableCursorDuringUpdates = true,
             })) {
                 Thread.Sleep(100);
                 WriteLine($"Scrolling is fun! ({i}/200)");
