@@ -44,6 +44,18 @@ namespace Yaap
         [DllImport(Kernel32, SetLastError = true)]
         static extern bool GetCurrentConsoleFontEx(IntPtr hConsoleOutput, bool bMaximumWindow, [In, Out] CONSOLE_FONT_INFOEX lpConsoleCurrentFont);
 
+        [DllImport(Kernel32, SetLastError = true)]
+        static extern FileType GetFileType(IntPtr hFile);
+
+        enum FileType : uint
+        {
+            FILE_TYPE_CHAR = 0x0002,
+            FILE_TYPE_DISK = 0x0001,
+            FILE_TYPE_PIPE = 0x0003,
+            FILE_TYPE_REMOTE = 0x8000,
+            FILE_TYPE_UNKNOWN = 0x0000,
+        }
+
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
         internal class CONSOLE_FONT_INFOEX
         {
@@ -189,5 +201,7 @@ namespace Yaap
             SetConsoleOutputCP(_originalConsoleOutCP);
             SetConsoleCP(_originalConsoleCP);
         }
+
+        public static bool DetectConsoleRedirectionOnWindows() => GetFileType(GetStdHandle(StdHandle.STD_OUTPUT_HANDLE)) != FileType.FILE_TYPE_CHAR;
     }
 }

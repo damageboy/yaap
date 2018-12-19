@@ -1,4 +1,5 @@
 using System;
+using System.Linq.Expressions;
 using JetBrains.Annotations;
 
 namespace Yaap
@@ -178,6 +179,6 @@ namespace Yaap
         /// Make the console cursor invisible during yaap updates and restore it to its previous state
         /// once the update is complete
         /// </summary>
-        public bool DisableCursorDuringUpdates { get; set; }
+        public bool DisableCursorDuringUpdates { get; set; } = true;
     }
 }
