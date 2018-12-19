@@ -58,7 +58,7 @@ namespace Demo
             WriteLine("Here's the same demo as before, but this time with colors");
             WriteLine();
 
-            foreach (var i in Range(0, 200).Yaap(settings: new YaapSettings
+            foreach (var _ in Range(0, 200).Yaap(settings: new YaapSettings
                 {Description = "regular", Width = 100, ColorScheme = YaapColorScheme.Bright}))
                 Thread.Sleep(100);
         }
