@@ -25,15 +25,24 @@ namespace Yaap
         static int _maxYaapPosition;
         static int _totalLinesAddedAfterYaaps;
         static int _isRunning;
+        static bool _wasCursorHidden;
+        internal static ThreadLocal<Stack<Yaap>> YaapStack =
+            new ThreadLocal<Stack<Yaap>>(() => new Stack<Yaap>());
 
         static YaapRegistry()
         {
+            AppDomain.CurrentDomain.ProcessExit += (sender, args) => {
+                OnCancelKeyPress(null, null);
+            };
+
             if (Environment.OSVersion.Platform != PlatformID.Win32NT) {
                 return;
             }
 
             RedPill();
-            AppDomain.CurrentDomain.ProcessExit += (sender, args) => BluePill();
+            AppDomain.CurrentDomain.ProcessExit += (sender, args) => {
+                BluePill();
+            };
         }
 
         static bool IsRunning
@@ -41,10 +50,6 @@ namespace Yaap
             get => _isRunning == 1;
             set => Interlocked.Exchange(ref _isRunning, value ? 1 : 0);
         }
-
-
-        internal static ThreadLocal<Stack<Yaap>> YaapStack =
-            new ThreadLocal<Stack<Yaap>>(() => new Stack<Yaap>());
 
         internal static void AddInstance(Yaap yaap)
         {
@@ -160,32 +165,62 @@ namespace Yaap
 
             int FixToBottom()
             {
-                ANSICodes.SetScrollableRegion(0, Console.WindowHeight - 10);
+                ANSICodes.SetScrollableRegion(0, Console.WindowHeight - 1);
                 return yaap.Position = Console.WindowHeight;
             }
         }
 
         static void OnCancelKeyPress(object sender, ConsoleCancelEventArgs e)
         {
-            Console.Write("\r");
-            Console.Write(ANSICodes.EraseEntireLine);
-            Console.CursorVisible = true;
+            lock (_consoleLock) {
+                Console.Write("\r");
+                Console.Write(ANSICodes.EraseEntireLine);
+                if (_wasCursorHidden) {
+                    Console.CursorVisible = true;
+                }
+                ANSICodes.SetScrollableRegion(0, Console.BufferHeight+1);
+            }
         }
-
 
         static void UpdateYaaps()
         {
-            const int INTERVAL_MS = 10;
-            Console.CursorVisible = false;
-            while (IsRunning)
-            {
-                foreach (var y in _instances.Values) {
-                    if (!y.NeedsRepaint) {
-                        continue;
+            bool lockWasTaken = false;
+            try {
+                const int INTERVAL_MS = 50;
+                _wasCursorHidden = false;
+                while (IsRunning) {
+                    foreach (var y in _instances.Values) {
+                        if (!y.NeedsRepaint) {
+                            continue;
+                        }
+
+                        Monitor.Enter(_consoleLock, ref lockWasTaken);
+
+                        if (y.Settings.DisableCursorDuringUpdates && !_wasCursorHidden) {
+                            Console.CursorVisible = false;
+                            _wasCursorHidden = true;
+                        }
+
+                        RepaintSingleYaap(y);
                     }
-                    RepaintSingleYaap(y);
+
+
+                    if (_wasCursorHidden) {
+                        Console.CursorVisible = true;
+                        _wasCursorHidden = false;
+                    }
+
+                    if (lockWasTaken) {
+                        lockWasTaken = false;
+                        Monitor.Exit(_consoleLock);
+                    }
+
+                    Thread.Sleep(INTERVAL_MS);
                 }
-                Thread.Sleep(INTERVAL_MS);
+            }
+            finally {
+                if (lockWasTaken)
+                    Monitor.Exit(_consoleLock);
             }
         }
 
@@ -195,18 +230,16 @@ namespace Yaap
         static void RepaintSingleYaap(Yaap yaap)
         {
             var buffer = yaap.Repaint();
-            lock (_consoleLock) {
-                // We may have been already disposed while awaiting to be repainted...
-                // (Yes, this actually happenned...)
-                if (yaap.IsDisposed) {
-                    return;
-                }
-
-                buffer.CopyTo(0, _chars, 0, buffer.Count);
-                var oldPos = MoveTo(yaap);
-                Console.Write(_chars, 0, buffer.Count);
-                MoveTo(oldPos);
+            // We may have been already disposed while awaiting to be repainted...
+            // (Yes, this actually happenned...)
+            if (yaap.IsDisposed) {
+                return;
             }
+
+            buffer.CopyTo(0, _chars, 0, buffer.Count);
+            var oldPos = MoveTo(yaap);
+            Console.Write(_chars, 0, buffer.Count);
+            MoveTo(oldPos);
         }
 
         static void ClearSingleYaap(Yaap yaap)
