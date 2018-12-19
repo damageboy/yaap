@@ -126,29 +126,29 @@ namespace Demo
             WriteLine("While still updating the progress bars in a coherent way...");
             WriteLine();
 
-            var mre = new ManualResetEvent(false);
-            var allReady = new Semaphore(0, 10);
+            using (var mre = new ManualResetEvent(false))
+            using (var allReady = new CountdownEvent(10)) {
+                var threads = Range(0, 10).Select(ti => new Thread(() => {
+                    var r = new Random((int) (DateTime.Now.Ticks % int.MaxValue));
+                    var y = Range(0, 200).Yaap(settings: new YaapSettings
+                        {Description = $"thread{ti}", VerticalPosition = ti});
+                    allReady.Signal();
+                    mre.WaitOne();
+                    foreach (var _ in y) {
+                        Thread.Sleep(r.Next(90, 110) / (ti + 1));
+                    }
+                })).ToList();
 
-            var threads = Range(0, 10).Select(ti => new Thread(() => {
-                var r = new Random((int) (DateTime.Now.Ticks % int.MaxValue));
-                var y = Range(0, 200).Yaap(settings: new YaapSettings {Description = $"thread{ti}", VerticalPosition = ti});
-                allReady.Release();
-                mre.WaitOne();
-                foreach (var i in y) {
-                    Thread.Sleep(r.Next(90, 110) / (ti + 1));
+                foreach (var t in threads) {
+                    t.Start();
                 }
-            })).ToList();
 
-            foreach (var t in threads) {
-                t.Start();
-            }
+                allReady.Wait();
 
-            foreach (var t in threads) {
-                allReady.WaitOne();
-            }
-            mre.Set();
-            foreach (var t in threads) {
-                t.Join();
+                mre.Set();
+                foreach (var t in threads) {
+                    t.Join();
+                }
             }
         }
 
@@ -157,7 +157,6 @@ namespace Demo
             foreach (var i in Range(0, 200).Yaap(settings: new YaapSettings {
                 Description = "regular", Width = 100,
                 Positioning = YaapPositioning.FixToBottom,
-                DisableCursorDuringUpdates = true,
             })) {
                 Thread.Sleep(100);
                 WriteLine($"Scrolling is fun! ({i}/200)");

@@ -23,6 +23,9 @@ namespace Yaap
         public const string EraseToLineEnd = CSI + "K";
         public const string EraseEntireLine = CSI + "2K";
         public const string EraseToLineStart = CSI + "1K";
+        public static string SaveCursorPosition = ESC + "7";
+        public static string RestoreCursorPosition = ESC + "8";
+
 
         internal static void SetScrollableRegion(int top, int bottom) =>
             Console.Write($"{CSI}{top};{bottom}r");
