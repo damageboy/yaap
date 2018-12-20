@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
@@ -11,14 +10,13 @@ using System.Text;
 using System.Text.Formatting;
 using System.Threading;
 using JetBrains.Annotations;
-using System.Net.Http.Headers;
 
 namespace Yaap
 {
     static class YaapRegistry
     {
         static Thread _monitorThread;
-        static readonly char[] _chars = new char[Console.WindowWidth * 2];
+        static char[] _chars = new char[Console.WindowWidth * 10];
         static readonly object _consoleLock = new object();
         static readonly object _threadLock = new object();
         static readonly IDictionary<int, Yaap> _instances = new ConcurrentDictionary<int, Yaap>();
@@ -29,8 +27,8 @@ namespace Yaap
         internal static ThreadLocal<Stack<Yaap>> YaapStack =
             new ThreadLocal<Stack<Yaap>>(() => new Stack<Yaap>());
 
-        static bool _vt100IsSupported;
-        static bool _isConsoleRedirected;
+        static readonly bool _vt100IsSupported;
+        static readonly bool _isConsoleRedirected;
 
         static YaapRegistry()
         {
@@ -87,14 +85,14 @@ namespace Yaap
 
                     if (IsRunning) {
                         // Windows console (in the case we are on windows) has already been red-pilled
-                        // So repaint() and byebye
-                        RepaintSingleYaap(yaap);
+                        // So repaint() and bye-bye
+                        RepaintYaap(yaap);
                         return;
                     }
 
                     // If we are just starting up the monitoring thread, we've
                     // just potentially red-pilled the windows console, so we can repaint now
-                    RepaintSingleYaap(yaap);
+                    RepaintYaap(yaap);
 
                     IsRunning = true;
                     Console.CancelKeyPress += OnCancelKeyPress;
@@ -102,7 +100,8 @@ namespace Yaap
 
                 if (_isConsoleRedirected)
                     return;
-                _monitorThread = new Thread(UpdateYaaps) { Name = nameof(UpdateYaaps) };
+                _monitorThread = _vt100IsSupported ? new Thread(UpdateYaapsOnVt100) : new Thread(UpdateYaapsOnWindowsNoVt100);
+                _monitorThread.Name = "yaap-updater";
                 _monitorThread.Start();
             }
         }
@@ -117,10 +116,10 @@ namespace Yaap
                     // In case we didn't have a recent update to the progress bar, it might be @ 100%
                     // "in reality" but not visually.... This call will close that gap
                     if (yaap.Settings.Leave) {
-                        RepaintSingleYaap(yaap);
+                        RepaintYaap(yaap);
                     }
                     else {
-                        ClearSingleYaap(yaap);
+                        ClearYaap(yaap);
                     }
 
                     _instances.Remove(yaap.Position);
@@ -210,11 +209,63 @@ namespace Yaap
             }
         }
 
-        static void UpdateYaaps()
+        static readonly StringBuffer _buffer = new StringBuffer(Console.WindowWidth * 10);
+
+        const int INTERVAL_MS = 50;
+        static void UpdateYaapsOnVt100()
+        {
+
+            while (IsRunning) {
+                _buffer.Clear();
+                foreach (var y in _instances.Values) {
+                    if (!y.NeedsRepaint) {
+                        continue;
+                    }
+
+                    _buffer.Append(ANSICodes.SaveCursorPosition);
+                    AppendYaapToBuffer(y, _buffer);
+                }
+
+                if (_buffer.Count > 0) {
+                    _buffer.Append(ANSICodes.RestoreCursorPosition);
+                    SpillBuffer();
+                }
+
+                Thread.Sleep(INTERVAL_MS);
+            }
+        }
+
+        static void SpillBuffer()
+        {
+            if (_buffer.Count > _chars.Length)
+                Array.Resize(ref _chars, _buffer.Count);
+            _buffer.CopyTo(0, _chars, 0, _buffer.Count);
+            Console.Write(_chars, 0, _buffer.Count);
+        }
+
+        static void RepaintYaapWithVt100(Yaap yaap)
+        {
+            _buffer.Clear();
+            _buffer.Append(ANSICodes.SaveCursorPosition);
+            AppendYaapToBuffer(yaap, _buffer);
+            _buffer.Append(ANSICodes.RestoreCursorPosition);
+            SpillBuffer();
+        }
+
+
+        static void AppendYaapToBuffer(Yaap yaap, StringBuffer buffer)
+        {
+            buffer.AppendFormat(ANSICodes.CSI + "{0}d", yaap.Position + 1);
+            buffer.Append('\r');
+            buffer.Append(ANSICodes.EraseToLineEnd);
+
+            yaap.Repaint(buffer);
+        }
+
+        static void UpdateYaapsOnWindowsNoVt100()
         {
             bool lockWasTaken = false;
             try {
-                const int INTERVAL_MS = 50;
                 _wasCursorHidden = false;
                 while (IsRunning) {
                     foreach (var y in _instances.Values) {
@@ -230,7 +281,7 @@ namespace Yaap
                             _wasCursorHidden = true;
                         }
 
-                        RepaintSingleYaap(y);
+                        RepaintYaapWindowsNoVt100(y);
                     }
 
 
@@ -253,59 +304,60 @@ namespace Yaap
             }
         }
 
-        //static char[] _cursorOn  = {(char) 0x9B, (char) 0x3F, (char) 0x32, (char) 0x35, (char) 0x6C};
-        //static char[] _cursorOff = {(char) 0x9B, (char) 0x3F, (char) 0x32, (char) 0x35, (char) 0x68};
-
-        static void RepaintSingleYaap(Yaap yaap)
+        static void RepaintYaapWindowsNoVt100(Yaap yaap)
         {
-            yaap.Buffer.Clear();
-            (int x, int y) oldPos = (0,0);
+            _buffer.Clear();
+            var (x, y) = MoveTo(yaap);
+            _buffer.Append('\r');
+            _buffer.Append(ANSICodes.EraseToLineEnd);
+            yaap.Repaint(_buffer);
+            SpillBuffer();
+            MoveTo(x, y);
+        }
+
+
+        static void RepaintYaap(Yaap yaap)
+        {
             if (_vt100IsSupported) {
-                MoveAndStoreOldPos(yaap);
+                RepaintYaapWithVt100(yaap);
             }
             else {
-                oldPos = MoveTo(yaap);
+                RepaintYaapWindowsNoVt100(yaap);
             }
+        }
 
-
-            var buffer = yaap.Repaint();
-            // We may have been already disposed while awaiting to be repainted...
-            // (Yes, this actually happenned...)
-            if (yaap.IsDisposed) {
-                return;
-            }
-
+        static void ClearYaap(Yaap yaap)
+        {
             if (_vt100IsSupported) {
-                RestorePos(yaap);
-                buffer.CopyTo(0, _chars, 0, buffer.Count);
-                Console.Write(_chars, 0, buffer.Count);
-
-            } else {
-                buffer.CopyTo(0, _chars, 0, buffer.Count);
-                Console.Write(_chars, 0, buffer.Count);
-                MoveTo(oldPos);
+                ClearYaapWithVt100(yaap);
+            }
+            else {
+                ClearYaapWindowsNoVt100(yaap);
             }
         }
 
-        static void RestorePos(Yaap yaap)
-        {
-            yaap.Buffer.Append(ANSICodes.RestoreCursorPosition);
-        }
-
-        static void MoveAndStoreOldPos(Yaap yaap)
-        {
-            yaap.Buffer.Append(ANSICodes.SaveCursorPosition);
-            yaap.Buffer.AppendFormat(ANSICodes.CSI + "{0}d", yaap.Position);
-        }
-
-        static void ClearSingleYaap(Yaap yaap)
+        static void ClearYaapWindowsNoVt100(Yaap yaap)
         {
             lock (_consoleLock) {
-                var oldPos = MoveTo(yaap);
-                ClearEntireLine();
-                MoveTo(oldPos);
+                var (x, y) = MoveTo(yaap);
+                yaap.Repaint(_buffer);
+                // Looks silly eh?
+                // The reason is we don't want to bother to understand how many printable characters are in the buffer
+                // so we simply backspace _buffer.Count and we know for sure we've deleted the entire line
+                // without bothering to decode VT100
+                _buffer.Append('\b', _buffer.Count);
+                SpillBuffer();
+                MoveTo(x, y);
             }
+        }
 
+        static void ClearYaapWithVt100(Yaap yaap)
+        {
+            _buffer.Append(ANSICodes.SaveCursorPosition);
+            _buffer.AppendFormat(ANSICodes.CSI + "{0}d", yaap.Position + 1);
+            _buffer.Append(ANSICodes.EraseEntireLine);
+            _buffer.Append(ANSICodes.RestoreCursorPosition);
+            SpillBuffer();
         }
 
         internal static void ClearScreen()
@@ -315,31 +367,7 @@ namespace Yaap
             }
         }
 
-        internal static void ClearEntireLine()
-        {
-            lock (_consoleLock) {
-                Console.Write(ANSICodes.EraseEntireLine);
-            }
-        }
-        internal static void ClearLineToEnd()
-        {
-            lock (_consoleLock) {
-                Console.Write(ANSICodes.EraseToLineEnd);
-            }
-        }
-
-        internal static void ClearLineToStart()
-        {
-            lock (_consoleLock) {
-                Console.Write(ANSICodes.EraseToLineStart);
-            }
-        }
-
-        static void MoveTo((int x, int y) oldPos)
-        {
-            Console.CursorLeft = oldPos.x;
-            Console.CursorTop = oldPos.y;
-        }
+        static void MoveTo(int x, int y) => Console.SetCursorPosition(x, y);
 
         static (int x, int y) MoveTo(Yaap yaap)
         {
@@ -407,7 +435,6 @@ namespace Yaap
         readonly string _description;
         readonly bool _useMetricAbbreviations;
         readonly double _smoothingFactor;
-        internal StringBuffer Buffer { get; }
 
         static Yaap()
         {
@@ -461,8 +488,6 @@ namespace Yaap
             _description = Settings.Description;
             _useMetricAbbreviations = Settings.MetricAbbreviations;
             _smoothingFactor = Settings.SmoothingFactor;
-
-            Buffer = new StringBuffer(Console.WindowWidth);
 
             if (Settings.UseASCII || _unicodeNotWorky) {
                 _selectedBarStyle = _asciiBarStyle;
@@ -521,7 +546,7 @@ namespace Yaap
         }
 
 
-        Yaap Parent { get; set; }
+        Yaap Parent { get; }
 
         Yaap Child { get; set; }
 
@@ -590,6 +615,7 @@ namespace Yaap
         /// The current <see cref="YaapState"/> of the instance
         /// </summary>
         /// <value>The state.</value>
+        [PublicAPI]
         public YaapState State
         {
             get => _state;
@@ -695,7 +721,7 @@ namespace Yaap
         bool ShouldShoveTime            => (Settings.Elements & YaapElement.Time) != 0;
         bool ShouldShoveRate            => (Settings.Elements & YaapElement.Rate) != 0;
 
-        internal StringBuffer Repaint()
+        internal void Repaint(StringBuffer buffer)
         {
             // Capture progress while repainting
             var progress = Progress;
@@ -706,9 +732,6 @@ namespace Yaap
 
             var cs = Settings.ColorScheme;
 
-            //Buffer.Clear();
-            Buffer.Append('\r');
-            Buffer.Append(ANSICodes.EraseToLineEnd);
 
             if (ShouldShoveDescription) {
                 ShoveDescription();
@@ -726,17 +749,17 @@ namespace Yaap
                 ShoveProgressTotals();
             }
 
-            Buffer.Append(' ');
+            buffer.Append(' ');
             //[{{0}}<{{1}}, {{2}}{unitName}/s]
 
             // At least one of Time|Rate is turned on?
             if ((Settings.Elements & (YaapElement.Rate | YaapElement.Time)) != 0) {
-                Buffer.Append('[');
+                buffer.Append('[');
             }
 
             ShoveTime();
             if (ShouldShoveTime) {
-                Buffer.Append(", ");
+                buffer.Append(", ");
             }
 
             if (ShouldShoveRate) {
@@ -744,14 +767,13 @@ namespace Yaap
             }
 
             if ((Settings.Elements & (YaapElement.Rate | YaapElement.Time)) != 0) {
-                Buffer.Append(']');
+                buffer.Append(']');
             }
 
-            Buffer.Append(ANSICodes.EraseToLineEnd);
+            buffer.Append(ANSICodes.EraseToLineEnd);
 
             _lastProgress = progress;
             _lastRepaintTicks = elapsedTicks;
-            return Buffer;
 
             (double rate, TimeSpan totalTime) RecalculateRateAndTotalTime()
             {
@@ -783,20 +805,20 @@ namespace Yaap
                 if (string.IsNullOrWhiteSpace(_description)) {
                     return;
                 }
-                Buffer.Append(_description);
-                Buffer.Append(": ");
+                buffer.Append(_description);
+                buffer.Append(": ");
             }
 
             void ShoveProgressPercentage()
             {
                 ChangeColor(cs.ProgressPercentColor);
-                Buffer.AppendFormat("{0,3}%", (int) (((progress + nestedProgress) / Total) * 100));
+                buffer.AppendFormat("{0,3}%", (int) (((progress + nestedProgress) / Total) * 100));
                 ResetColor();
             }
 
             void ShoveProgressBar()
             {
-                Buffer.Append('|');
+                buffer.Append('|');
 
                 ChangeColor(SelectProgressBarColor());
                 var numChars = _selectedBarStyle.Length > 1
@@ -805,8 +827,8 @@ namespace Yaap
                 ResetColor();
                 var numSpaces = _maxGlyphWidth - numChars;
                 if (numSpaces > 0)
-                    Buffer.Append(' ', numSpaces);
-                Buffer.Append('|');
+                    buffer.Append(' ', numSpaces);
+                buffer.Append('|');
 
                 TerminalColor SelectProgressBarColor()
                 {
@@ -822,7 +844,7 @@ namespace Yaap
                 int RenderSimpleProgressGlyphs()
                 {
                     var numGlypchChars = (int)((progress * _maxGlyphWidth) / Total);
-                    Buffer.Append(_selectedBarStyle[0], numGlypchChars);
+                    buffer.Append(_selectedBarStyle[0], numGlypchChars);
                     return numGlypchChars;
                 }
 
@@ -831,14 +853,14 @@ namespace Yaap
                     var blocks = ((progress + nestedProgress) * (_maxGlyphWidth * _selectedBarStyle.Length)) / Total;
                     Debug.Assert(blocks >= 0);
                     var completeBlocks = (int)(blocks / _selectedBarStyle.Length);
-                    Buffer.Append(_selectedBarStyle[_selectedBarStyle.Length - 1], completeBlocks);
+                    buffer.Append(_selectedBarStyle[_selectedBarStyle.Length - 1], completeBlocks);
                     var lastCharIdx = (int)(blocks % _selectedBarStyle.Length);
 
                     if (lastCharIdx == 0) {
                         return completeBlocks;
                     }
 
-                    Buffer.Append(_selectedBarStyle[lastCharIdx]);
+                    buffer.Append(_selectedBarStyle[lastCharIdx]);
                     return completeBlocks + 1;
                 }
 
@@ -849,10 +871,10 @@ namespace Yaap
                 ChangeColor(cs.ProgressCountColor);
                 if (_useMetricAbbreviations) {
                     var (abbrevNum, suffix) = GetMetricAbbreviation(Progress);
-                    Buffer.AppendFormat(_progressCountFmt, abbrevNum, suffix);
+                    buffer.AppendFormat(_progressCountFmt, abbrevNum, suffix);
                 }
                 else {
-                    Buffer.AppendFormat(_progressCountFmt, Progress);
+                    buffer.AppendFormat(_progressCountFmt, Progress);
                 }
 
                 ResetColor();
@@ -862,7 +884,7 @@ namespace Yaap
             void ShoveTime()
             {
                 ChangeColor(cs.TimeColor);
-                WriteTimes(Buffer, new TimeSpan((elapsedTicks * TimeSpan.TicksPerSecond) / Stopwatch.Frequency), _totalTime);
+                WriteTimes(buffer, new TimeSpan((elapsedTicks * TimeSpan.TicksPerSecond) / Stopwatch.Frequency), _totalTime);
                 ResetColor();
             }
 
@@ -872,33 +894,34 @@ namespace Yaap
                 if (_useMetricAbbreviations) {
                     var (abbrevNum, suffix) = GetMetricAbbreviation(_rate);
                     if (abbrevNum < 100)
-                        Buffer.AppendFormat("{0:F2}{1}{2}/s", abbrevNum, suffix, _unitName);
+                        buffer.AppendFormat("{0:F2}{1}{2}/s", abbrevNum, suffix, _unitName);
                     else
-                        Buffer.AppendFormat("{0}{1}{2}/s", (int) abbrevNum, suffix, _unitName);
+                        buffer.AppendFormat("{0}{1}{2}/s", (int) abbrevNum, suffix, _unitName);
                 }
                 else
                 {
                     if (_rate < 100)
-                        Buffer.AppendFormat("{0:F2}{1}/s", _rate, _unitName);
+                        buffer.AppendFormat("{0:F2}{1}/s", _rate, _unitName);
                     else
-                        Buffer.AppendFormat("{0}{1}/s", (int) _rate, _unitName);
+                        buffer.AppendFormat("{0}{1}/s", (int) _rate, _unitName);
                 }
                 ResetColor();
             }
+
+            void ChangeColor(TerminalColor color)
+            {
+                _lastColor = color;
+                buffer.Append(color.EscapeCode);
+            }
+
+            void ResetColor()
+            {
+                if (_lastColor == TerminalColor.None)
+                    return;
+                buffer.Append(TerminalColor.Reset.EscapeCode);
+            }
         }
 
-        void ChangeColor(TerminalColor color)
-        {
-            _lastColor = color;
-            Buffer.Append(color.EscapeCode);
-        }
-
-        void ResetColor()
-        {
-            if (_lastColor == TerminalColor.None)
-                return;
-            Buffer.Append(TerminalColor.Reset.EscapeCode);
-        }
 
         static void WriteTimes(StringBuffer buffer, TimeSpan elapsed, TimeSpan remaining)
         {

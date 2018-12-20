@@ -155,7 +155,7 @@ namespace Demo
         static void Demo7()
         {
             foreach (var i in Range(0, 200).Yaap(settings: new YaapSettings {
-                Description = "regular", Width = 100,
+                Description = "bottom-pinned", Width = 100,
                 Positioning = YaapPositioning.FixToBottom,
             })) {
                 Thread.Sleep(100);
