@@ -33,17 +33,5 @@ namespace Yaap
         /// Clear the entire terminal screen
         /// </summary>
         public static void ClearScreen() => YaapRegistry.ClearScreen();
-        /// <summary>
-        /// Clear the entire line where the cursor is positioned
-        /// </summary>
-        public static void ClearEntireLine() => YaapRegistry.ClearEntireLine();
-        /// <summary>
-        /// Clear the entire line fro the current position to the end of the line
-        /// </summary>
-        public static void ClearLineToEnd() => YaapRegistry.ClearLineToEnd();
-        /// <summary>
-        /// Clear the entire line fro the current position to the beginning of the line
-        /// </summary>
-        public static void ClearLineToStart() => YaapRegistry.ClearLineToStart();
     }
 }
