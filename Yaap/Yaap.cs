@@ -13,17 +13,182 @@ using JetBrains.Annotations;
 
 namespace Yaap
 {
+    internal interface IYaapBackend : IDisposable
+    {
+        void UpdateAllYaaps(ICollection<Yaap> instances);
+        bool UpdateSingleYaap(Yaap yaap);
+        void ClearSingleYaap(Yaap yaap);
+    }
+
+    internal class VT100Backend : IYaapBackend
+    {
+        readonly StringBuffer _buffer = new StringBuffer(Console.WindowWidth * 10);
+        static char[] _chars = new char[Console.WindowWidth * 10];
+
+        public void UpdateAllYaaps(ICollection<Yaap> instances)
+        {
+
+            _buffer.Clear();
+            foreach (var y in instances) {
+                if (!y.NeedsRepaint) {
+                    continue;
+                }
+
+                if (_buffer.Count == 0) {
+                    _buffer.Append(ANSICodes.SaveCursorPosition);
+                }
+
+                AppendYaapToBuffer(y, _buffer);
+            }
+
+            if (_buffer.Count > 0) {
+                _buffer.Append(ANSICodes.RestoreCursorPosition);
+                SpillBuffer();
+            }
+        }
+
+        static void AppendYaapToBuffer(Yaap yaap, StringBuffer buffer)
+        {
+            buffer.AppendFormat(ANSICodes.CSI + "{0}d", yaap.Position + 1);
+            buffer.Append('\r');
+            buffer.Append(ANSICodes.EraseToLineEnd);
+
+            yaap.Repaint(buffer);
+        }
+
+        public bool UpdateSingleYaap(Yaap yaap)
+        {
+            _buffer.Clear();
+            _buffer.Append(ANSICodes.SaveCursorPosition);
+            AppendYaapToBuffer(yaap, _buffer);
+            _buffer.Append(ANSICodes.RestoreCursorPosition);
+            SpillBuffer();
+        }
+
+        public void ClearSingleYaap(Yaap yaap)
+        {
+            _buffer.Append(ANSICodes.SaveCursorPosition);
+            _buffer.AppendFormat(ANSICodes.CSI + "{0}d", yaap.Position + 1);
+            _buffer.Append(ANSICodes.EraseEntireLine);
+            _buffer.Append(ANSICodes.RestoreCursorPosition);
+            SpillBuffer();
+        }
+
+        public void Dispose()
+        {
+            throw new NotImplementedException();
+        }
+
+        void SpillBuffer()
+        {
+            if (_buffer.Count > _chars.Length)
+                Array.Resize(ref _chars, _buffer.Count);
+            _buffer.CopyTo(0, _chars, 0, _buffer.Count);
+            Console.Write(_chars, 0, _buffer.Count);
+        }
+    }
+
+    internal class WindowsConsoleBackend : IYaapBackend
+    {
+        readonly object _consoleLock = new object();
+        bool _wasCursorHidden;
+        readonly StringBuffer _buffer = new StringBuffer(Console.WindowWidth * 10);
+        public void UpdateAllYaaps(ICollection<Yaap> instances)
+        {
+            bool lockWasTaken = false;
+            try {
+                _wasCursorHidden = false;
+                foreach (var y in instances) {
+                    if (!y.NeedsRepaint) {
+                        continue;
+                    }
+
+                    if (!lockWasTaken)
+                        Monitor.Enter(_consoleLock, ref lockWasTaken);
+
+                    if (y.Settings.DisableCursorDuringUpdates && !_wasCursorHidden) {
+                        Console.CursorVisible = false;
+                        _wasCursorHidden = true;
+                    }
+
+                    RepaintYaapWindowsNoVt100(y);
+                }
+
+
+                if (_wasCursorHidden) {
+                    Console.CursorVisible = true;
+                    _wasCursorHidden = false;
+                }
+
+                if (lockWasTaken) {
+                    lockWasTaken = false;
+                    Monitor.Exit(_consoleLock);
+                }
+
+            }
+            finally {
+                if (lockWasTaken)
+                    Monitor.Exit(_consoleLock);
+            }        }
+
+        public bool UpdateSingleYaap(Yaap yaap)
+        {
+            _buffer.Clear();
+            var (x, y) = MoveTo(yaap);
+            _buffer.Append('\r');
+            _buffer.Append(ANSICodes.EraseToLineEnd);
+            yaap.Repaint(_buffer);
+            SpillBuffer();
+            MoveTo(x, y);
+
+        }
+
+        public void ClearSingleYaap(Yaap yaap)
+        {
+            throw new NotImplementedException();
+        }
+
+        static void MoveTo(int x, int y) => Console.SetCursorPosition(x, y);
+
+        static (int x, int y) MoveTo(Yaap yaap)
+        {
+            var (x, y) = ConsolePosition;
+            switch (yaap.Settings.Positioning) {
+                case YaapPositioning.FlowAndSnapToTop:
+                    Console.CursorTop = Math.Max(0, y - (_maxYaapPosition - yaap.Position + _totalLinesAddedAfterYaaps));
+                    break;
+                case YaapPositioning.ClearAndAlignToTop:
+                case YaapPositioning.FixToBottom:
+                    Console.CursorTop = yaap.Position;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+            return (x, y);
+
+        }
+
+        static (int x, int y) ConsolePosition => (Console.CursorLeft, Console.CursorTop);
+
+
+        public void Dispose()
+        {
+            throw new NotImplementedException();
+        }
+
+    }
+
     static class YaapRegistry
     {
         static Thread _monitorThread;
         static char[] _chars = new char[Console.WindowWidth * 10];
-        static readonly object _consoleLock = new object();
+
         static readonly object _threadLock = new object();
         static readonly IDictionary<int, Yaap> _instances = new ConcurrentDictionary<int, Yaap>();
         static int _maxYaapPosition;
         static int _totalLinesAddedAfterYaaps;
         static int _isRunning;
-        static bool _wasCursorHidden;
+
         internal static ThreadLocal<Stack<Yaap>> YaapStack =
             new ThreadLocal<Stack<Yaap>>(() => new Stack<Yaap>());
 
@@ -214,23 +379,7 @@ namespace Yaap
         const int INTERVAL_MS = 50;
         static void UpdateYaapsOnVt100()
         {
-
             while (IsRunning) {
-                _buffer.Clear();
-                foreach (var y in _instances.Values) {
-                    if (!y.NeedsRepaint) {
-                        continue;
-                    }
-
-                    _buffer.Append(ANSICodes.SaveCursorPosition);
-                    AppendYaapToBuffer(y, _buffer);
-                }
-
-                if (_buffer.Count > 0) {
-                    _buffer.Append(ANSICodes.RestoreCursorPosition);
-                    SpillBuffer();
-                }
-
                 Thread.Sleep(INTERVAL_MS);
             }
         }
@@ -243,76 +392,14 @@ namespace Yaap
             Console.Write(_chars, 0, _buffer.Count);
         }
 
-        static void RepaintYaapWithVt100(Yaap yaap)
-        {
-            _buffer.Clear();
-            _buffer.Append(ANSICodes.SaveCursorPosition);
-            AppendYaapToBuffer(yaap, _buffer);
-            _buffer.Append(ANSICodes.RestoreCursorPosition);
-            SpillBuffer();
-        }
-
-
-        static void AppendYaapToBuffer(Yaap yaap, StringBuffer buffer)
-        {
-            buffer.AppendFormat(ANSICodes.CSI + "{0}d", yaap.Position + 1);
-            buffer.Append('\r');
-            buffer.Append(ANSICodes.EraseToLineEnd);
-
-            yaap.Repaint(buffer);
-        }
 
         static void UpdateYaapsOnWindowsNoVt100()
         {
-            bool lockWasTaken = false;
-            try {
-                _wasCursorHidden = false;
-                while (IsRunning) {
-                    foreach (var y in _instances.Values) {
-                        if (!y.NeedsRepaint) {
-                            continue;
-                        }
 
-                        if (!lockWasTaken)
-                            Monitor.Enter(_consoleLock, ref lockWasTaken);
-
-                        if (y.Settings.DisableCursorDuringUpdates && !_wasCursorHidden) {
-                            Console.CursorVisible = false;
-                            _wasCursorHidden = true;
-                        }
-
-                        RepaintYaapWindowsNoVt100(y);
-                    }
-
-
-                    if (_wasCursorHidden) {
-                        Console.CursorVisible = true;
-                        _wasCursorHidden = false;
-                    }
-
-                    if (lockWasTaken) {
-                        lockWasTaken = false;
-                        Monitor.Exit(_consoleLock);
-                    }
-
-                    Thread.Sleep(INTERVAL_MS);
-                }
-            }
-            finally {
-                if (lockWasTaken)
-                    Monitor.Exit(_consoleLock);
-            }
         }
 
         static void RepaintYaapWindowsNoVt100(Yaap yaap)
         {
-            _buffer.Clear();
-            var (x, y) = MoveTo(yaap);
-            _buffer.Append('\r');
-            _buffer.Append(ANSICodes.EraseToLineEnd);
-            yaap.Repaint(_buffer);
-            SpillBuffer();
-            MoveTo(x, y);
         }
 
 
@@ -351,15 +438,6 @@ namespace Yaap
             }
         }
 
-        static void ClearYaapWithVt100(Yaap yaap)
-        {
-            _buffer.Append(ANSICodes.SaveCursorPosition);
-            _buffer.AppendFormat(ANSICodes.CSI + "{0}d", yaap.Position + 1);
-            _buffer.Append(ANSICodes.EraseEntireLine);
-            _buffer.Append(ANSICodes.RestoreCursorPosition);
-            SpillBuffer();
-        }
-
         internal static void ClearScreen()
         {
             lock (_consoleLock) {
@@ -367,27 +445,6 @@ namespace Yaap
             }
         }
 
-        static void MoveTo(int x, int y) => Console.SetCursorPosition(x, y);
-
-        static (int x, int y) MoveTo(Yaap yaap)
-        {
-            var (x, y) = ConsolePosition;
-            switch (yaap.Settings.Positioning) {
-                case YaapPositioning.FlowAndSnapToTop:
-                    Console.CursorTop = Math.Max(0, y - (_maxYaapPosition - yaap.Position + _totalLinesAddedAfterYaaps));
-                    break;
-                case YaapPositioning.ClearAndAlignToTop:
-                case YaapPositioning.FixToBottom:
-                    Console.CursorTop = yaap.Position;
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-            return (x, y);
-
-        }
-
-        static (int x, int y) ConsolePosition => (Console.CursorLeft, Console.CursorTop);
 
         internal static void Write(string s) { lock (_consoleLock) { Console.Write(s); } }
 
