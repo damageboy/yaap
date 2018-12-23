@@ -5,178 +5,16 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Net;
 using System.Reflection;
 using System.Text;
 using System.Text.Formatting;
 using System.Threading;
 using JetBrains.Annotations;
+using Yaap.Backends;
 
 namespace Yaap
 {
-    internal interface IYaapBackend : IDisposable
-    {
-        void UpdateAllYaaps(ICollection<Yaap> instances);
-        bool UpdateSingleYaap(Yaap yaap);
-        void ClearSingleYaap(Yaap yaap);
-    }
-
-    internal class VT100Backend : IYaapBackend
-    {
-        readonly StringBuffer _buffer = new StringBuffer(Console.WindowWidth * 10);
-        static char[] _chars = new char[Console.WindowWidth * 10];
-
-        public void UpdateAllYaaps(ICollection<Yaap> instances)
-        {
-
-            _buffer.Clear();
-            foreach (var y in instances) {
-                if (!y.NeedsRepaint) {
-                    continue;
-                }
-
-                if (_buffer.Count == 0) {
-                    _buffer.Append(ANSICodes.SaveCursorPosition);
-                }
-
-                AppendYaapToBuffer(y, _buffer);
-            }
-
-            if (_buffer.Count > 0) {
-                _buffer.Append(ANSICodes.RestoreCursorPosition);
-                SpillBuffer();
-            }
-        }
-
-        static void AppendYaapToBuffer(Yaap yaap, StringBuffer buffer)
-        {
-            buffer.AppendFormat(ANSICodes.CSI + "{0}d", yaap.Position + 1);
-            buffer.Append('\r');
-            buffer.Append(ANSICodes.EraseToLineEnd);
-
-            yaap.Repaint(buffer);
-        }
-
-        public bool UpdateSingleYaap(Yaap yaap)
-        {
-            _buffer.Clear();
-            _buffer.Append(ANSICodes.SaveCursorPosition);
-            AppendYaapToBuffer(yaap, _buffer);
-            _buffer.Append(ANSICodes.RestoreCursorPosition);
-            SpillBuffer();
-        }
-
-        public void ClearSingleYaap(Yaap yaap)
-        {
-            _buffer.Append(ANSICodes.SaveCursorPosition);
-            _buffer.AppendFormat(ANSICodes.CSI + "{0}d", yaap.Position + 1);
-            _buffer.Append(ANSICodes.EraseEntireLine);
-            _buffer.Append(ANSICodes.RestoreCursorPosition);
-            SpillBuffer();
-        }
-
-        public void Dispose()
-        {
-            throw new NotImplementedException();
-        }
-
-        void SpillBuffer()
-        {
-            if (_buffer.Count > _chars.Length)
-                Array.Resize(ref _chars, _buffer.Count);
-            _buffer.CopyTo(0, _chars, 0, _buffer.Count);
-            Console.Write(_chars, 0, _buffer.Count);
-        }
-    }
-
-    internal class WindowsConsoleBackend : IYaapBackend
-    {
-        readonly object _consoleLock = new object();
-        bool _wasCursorHidden;
-        readonly StringBuffer _buffer = new StringBuffer(Console.WindowWidth * 10);
-        public void UpdateAllYaaps(ICollection<Yaap> instances)
-        {
-            bool lockWasTaken = false;
-            try {
-                _wasCursorHidden = false;
-                foreach (var y in instances) {
-                    if (!y.NeedsRepaint) {
-                        continue;
-                    }
-
-                    if (!lockWasTaken)
-                        Monitor.Enter(_consoleLock, ref lockWasTaken);
-
-                    if (y.Settings.DisableCursorDuringUpdates && !_wasCursorHidden) {
-                        Console.CursorVisible = false;
-                        _wasCursorHidden = true;
-                    }
-
-                    RepaintYaapWindowsNoVt100(y);
-                }
-
-
-                if (_wasCursorHidden) {
-                    Console.CursorVisible = true;
-                    _wasCursorHidden = false;
-                }
-
-                if (lockWasTaken) {
-                    lockWasTaken = false;
-                    Monitor.Exit(_consoleLock);
-                }
-
-            }
-            finally {
-                if (lockWasTaken)
-                    Monitor.Exit(_consoleLock);
-            }        }
-
-        public bool UpdateSingleYaap(Yaap yaap)
-        {
-            _buffer.Clear();
-            var (x, y) = MoveTo(yaap);
-            _buffer.Append('\r');
-            _buffer.Append(ANSICodes.EraseToLineEnd);
-            yaap.Repaint(_buffer);
-            SpillBuffer();
-            MoveTo(x, y);
-
-        }
-
-        public void ClearSingleYaap(Yaap yaap)
-        {
-            throw new NotImplementedException();
-        }
-
-        static void MoveTo(int x, int y) => Console.SetCursorPosition(x, y);
-
-        static (int x, int y) MoveTo(Yaap yaap)
-        {
-            var (x, y) = ConsolePosition;
-            switch (yaap.Settings.Positioning) {
-                case YaapPositioning.FlowAndSnapToTop:
-                    Console.CursorTop = Math.Max(0, y - (_maxYaapPosition - yaap.Position + _totalLinesAddedAfterYaaps));
-                    break;
-                case YaapPositioning.ClearAndAlignToTop:
-                case YaapPositioning.FixToBottom:
-                    Console.CursorTop = yaap.Position;
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-            return (x, y);
-
-        }
-
-        static (int x, int y) ConsolePosition => (Console.CursorLeft, Console.CursorTop);
-
-
-        public void Dispose()
-        {
-            throw new NotImplementedException();
-        }
-
-    }
 
     static class YaapRegistry
     {
@@ -192,46 +30,57 @@ namespace Yaap
         internal static ThreadLocal<Stack<Yaap>> YaapStack =
             new ThreadLocal<Stack<Yaap>>(() => new Stack<Yaap>());
 
-        static readonly bool _vt100IsSupported;
-        static readonly bool _isConsoleRedirected;
+        static readonly object _globalLock = new object();
+        static readonly IYaapBackend _backEnd;
 
         static YaapRegistry()
         {
-            _isConsoleRedirected = DetectConsoleRedirection();
+            _backEnd = SelectBackend();
 
-            if (_isConsoleRedirected)
-                return;
-
-            AppDomain.CurrentDomain.ProcessExit += (sender, args) => {
-                OnCancelKeyPress(null, null);
-            };
-
-            if (Environment.OSVersion.Platform != PlatformID.Win32NT) {
-                _vt100IsSupported = true;
-                return;
-            }
-
-            _vt100IsSupported = RedPill();
-            AppDomain.CurrentDomain.ProcessExit += (sender, args) => {
-                BluePill();
-            };
+            //AppDomain.CurrentDomain.ProcessExit += (sender, args) => {
+            //    OnCancelKeyPress(null, null);
+            //};
         }
 
-        static bool DetectConsoleRedirection()
+        static IYaapBackend SelectBackend()
+        {
+            if (IsConsoleRedirected())
+                return new NullBackend();
+            // Win32 is tricky, since we might be >= Windows 10, past the
+            // enlightenment period in MSFT, in which case we want to use
+            // VT100, as if this is a real OS.
+            // Altenatively, if we are stuck in the dark ages we use crappy win32
+            switch (Environment.OSVersion.Platform) {
+                case PlatformID.Win32NT when !Win32Console.EnableVT100Stuffs():
+                    return new WindowsConsoleBackend();
+                case PlatformID.Win32NT when Win32Console.EnableVT100Stuffs():
+                    AppDomain.CurrentDomain.ProcessExit += (sender, args) => {
+                        Win32Console.RestoreTerminalToPristineState();
+                    };
+                    return new VT100Backend();
+                case PlatformID.MacOSX:
+                case PlatformID.Unix:
+                    return new VT100Backend();
+                default:
+                    return new NullBackend();
+            }
+        }
+
+        static bool IsConsoleRedirected()
         {
             switch (Environment.OSVersion.Platform) {
                 case PlatformID.Win32NT:
-                    return Win32Console.DetectConsoleRedirectionOnWindows();
+                    return Win32Console.IsConsoleRedirected();
 
                 case PlatformID.MacOSX:
                 case PlatformID.Unix:
-                    return DetectConsoleRedirectionOnPosix();
+                    return IsConsoleRefirectedOnPosix();
                 default:
                     return false;
             }
         }
 
-        static bool DetectConsoleRedirectionOnPosix() =>
+        static bool IsConsoleRefirectedOnPosix() =>
             !Mono.Unix.Native.Syscall.isatty(1);
 
         static bool IsRunning
@@ -244,7 +93,7 @@ namespace Yaap
         {
             lock (_threadLock)
             {
-                lock (_consoleLock)
+                lock (_globalLock)
                 {
                     _instances.Add(GetOrSetVerticalPosition(yaap), yaap);
 
@@ -263,9 +112,7 @@ namespace Yaap
                     Console.CancelKeyPress += OnCancelKeyPress;
                 }
 
-                if (_isConsoleRedirected)
-                    return;
-                _monitorThread = _vt100IsSupported ? new Thread(UpdateYaapsOnVt100) : new Thread(UpdateYaapsOnWindowsNoVt100);
+                _monitorThread = new Thread(UpdateYaaps);
                 _monitorThread.Name = "yaap-updater";
                 _monitorThread.Start();
             }
@@ -275,7 +122,7 @@ namespace Yaap
         {
             lock (_threadLock)
             {
-                lock (_consoleLock)
+                lock (_globalLock)
                 {
                     // Repaint just before removing for cosmetic purposes:
                     // In case we didn't have a recent update to the progress bar, it might be @ 100%
@@ -306,9 +153,6 @@ namespace Yaap
                 _monitorThread.Join();
             }
         }
-
-        static bool RedPill() => Win32Console.EnableVT100Stuffs();
-        static void BluePill() => Win32Console.RestoreTerminalToPristineState();
 
         static int GetOrSetVerticalPosition(Yaap yaap)
         {
@@ -377,74 +221,22 @@ namespace Yaap
         static readonly StringBuffer _buffer = new StringBuffer(Console.WindowWidth * 10);
 
         const int INTERVAL_MS = 50;
-        static void UpdateYaapsOnVt100()
+        static void UpdateYaaps()
         {
             while (IsRunning) {
                 Thread.Sleep(INTERVAL_MS);
+                _backEnd.UpdateAllYaaps(_instances.Values);
             }
         }
 
-        static void SpillBuffer()
-        {
-            if (_buffer.Count > _chars.Length)
-                Array.Resize(ref _chars, _buffer.Count);
-            _buffer.CopyTo(0, _chars, 0, _buffer.Count);
-            Console.Write(_chars, 0, _buffer.Count);
-        }
+        static void RepaintYaap(Yaap yaap) => _backEnd.UpdateSingleYaap(yaap);
 
-
-        static void UpdateYaapsOnWindowsNoVt100()
-        {
-
-        }
-
-        static void RepaintYaapWindowsNoVt100(Yaap yaap)
-        {
-        }
-
-
-        static void RepaintYaap(Yaap yaap)
-        {
-            if (_vt100IsSupported) {
-                RepaintYaapWithVt100(yaap);
-            }
-            else {
-                RepaintYaapWindowsNoVt100(yaap);
-            }
-        }
-
-        static void ClearYaap(Yaap yaap)
-        {
-            if (_vt100IsSupported) {
-                ClearYaapWithVt100(yaap);
-            }
-            else {
-                ClearYaapWindowsNoVt100(yaap);
-            }
-        }
-
-        static void ClearYaapWindowsNoVt100(Yaap yaap)
-        {
-            lock (_consoleLock) {
-                var (x, y) = MoveTo(yaap);
-                yaap.Repaint(_buffer);
-                // Looks silly eh?
-                // The reason is we don't want to bother to understand how many printable characters are in the buffer
-                // so we simply backspace _buffer.Count and we know for sure we've deleted the entire line
-                // without bothering to decode VT100
-                _buffer.Append('\b', _buffer.Count);
-                SpillBuffer();
-                MoveTo(x, y);
-            }
-        }
+        static void ClearYaap(Yaap yaap) => _backEnd.ClearSingleYaap(yaap);
 
         internal static void ClearScreen()
         {
-            lock (_consoleLock) {
-                Console.Write(ANSICodes.ClearScreen);
-            }
+            Console.Write(ANSICodes.ClearScreen);
         }
-
 
         internal static void Write(string s) { lock (_consoleLock) { Console.Write(s); } }
 

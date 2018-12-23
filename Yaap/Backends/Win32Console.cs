@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace Yaap
+namespace Yaap.Backends
 {
     /// <summary>
     /// All of the pivoke stuff below is shamelssly stolen from https://github.com/AArnott/pinvoke
@@ -47,6 +47,12 @@ namespace Yaap
         [DllImport(Kernel32, SetLastError = true)]
         static extern FileType GetFileType(IntPtr hFile);
 
+        [DllImport(Kernel32, SetLastError = true)]
+        static extern bool GetConsoleScreenBufferInfo(
+            IntPtr hConsoleOutput,
+            out CONSOLE_SCREEN_BUFFER_INFO ConsoleScreenBufferInfo
+        );
+
         enum FileType : uint
         {
             FILE_TYPE_CHAR = 0x0002,
@@ -69,6 +75,31 @@ namespace Yaap
             internal  string FaceName;
         }
 
+        [StructLayout(LayoutKind.Sequential)]
+        internal struct COORD {
+            internal short X;
+            internal short Y;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        internal struct SMALL_RECT
+        {
+            internal short Left;
+            internal short Top;
+            internal short Right;
+            internal short Bottom;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct CONSOLE_SCREEN_BUFFER_INFO
+        {
+            public COORD dwSize;
+            public COORD dwCursorPosition;
+            public short wAttributes;
+            public SMALL_RECT srWindow;
+            public COORD dwMaximumWindowSize;
+        }
+
 
         /// <summary>
         /// Designates the console buffer mode on the <see cref="GetConsoleMode(IntPtr, out ConsoleBufferModes)"/> and <see cref="SetConsoleMode(IntPtr, ConsoleBufferModes)"/> functions
@@ -77,29 +108,17 @@ namespace Yaap
         enum ConsoleBufferModes
         {
             ENABLE_PROCESSED_INPUT = 0x0001,
-
             ENABLE_PROCESSED_OUTPUT = 0x0001,
-
             ENABLE_LINE_INPUT = 0x0002,
-
             ENABLE_WRAP_AT_EOL_OUTPUT = 0x0002,
-
             ENABLE_ECHO_INPUT = 0x0004,
-
             ENABLE_VIRTUAL_TERMINAL_PROCESSING = 0x0004,
-
             ENABLE_WINDOW_INPUT = 0x0008,
-
             DISABLE_NEWLINE_AUTO_RETURN = 0x0008,
-
             ENABLE_MOUSE_INPUT = 0x0010,
-
             ENABLE_LVB_GRID_WORLDWIDE = 0x0010,
-
             ENABLE_INSERT_MODE = 0x0020,
-
             ENABLE_QUICK_EDIT_MODE = 0x0040,
-
             ENABLE_VIRTUAL_TERMINAL_INPUT = 0x0200,
         }
 
@@ -202,6 +221,15 @@ namespace Yaap
             SetConsoleCP(_originalConsoleCP);
         }
 
-        public static bool DetectConsoleRedirectionOnWindows() => GetFileType(GetStdHandle(StdHandle.STD_OUTPUT_HANDLE)) != FileType.FILE_TYPE_CHAR;
+        public static bool IsConsoleRedirected() => GetFileType(GetStdHandle(StdHandle.STD_OUTPUT_HANDLE)) != FileType.FILE_TYPE_CHAR;
+
+        internal static (short x, short y) CursorPosition
+        {
+            get {
+                CONSOLE_SCREEN_BUFFER_INFO info;
+                GetConsoleScreenBufferInfo(GetStdHandle(StdHandle.STD_INPUT_HANDLE), out info);
+                return (info.dwCursorPosition.X, info.dwCursorPosition.Y);
+            }
+        }
     }
 }

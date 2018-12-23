@@ -173,12 +173,5 @@ namespace Yaap
         /// remains "on" the Terminal in case of scrolling
         /// </summary>
         public YaapPositioning Positioning { get; set; }
-
-
-        /// <summary>
-        /// Make the console cursor invisible during yaap updates and restore it to its previous state
-        /// once the update is complete
-        /// </summary>
-        public bool DisableCursorDuringUpdates { get; set; } = true;
     }
 }
