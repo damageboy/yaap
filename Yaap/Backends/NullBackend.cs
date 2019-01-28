@@ -12,9 +12,7 @@ namespace Yaap.Backends
         {
         }
 
-        public bool UpdateSingleYaap(Yaap yaap)
-        {
-        }
+        public void UpdateSingleYaap(Yaap yaap) { }
 
         public void ClearSingleYaap(Yaap yaap)
         {

@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Text.Formatting;
 
+using static Yaap.YaapRegistry;
+
 namespace Yaap.Backends {
     internal class VT100Backend : IYaapBackend
     {
@@ -38,7 +40,7 @@ namespace Yaap.Backends {
             yaap.Repaint(buffer);
         }
 
-        public bool UpdateSingleYaap(Yaap yaap)
+        public void UpdateSingleYaap(Yaap yaap)
         {
             _buffer.Clear();
             _buffer.Append(ANSICodes.SaveCursorPosition);

@@ -221,13 +221,10 @@ namespace Yaap.Backends
             SetConsoleCP(_originalConsoleCP);
         }
 
-        public static bool IsConsoleRedirected() => GetFileType(GetStdHandle(StdHandle.STD_OUTPUT_HANDLE)) != FileType.FILE_TYPE_CHAR;
-
         internal static (short x, short y) CursorPosition
         {
             get {
-                CONSOLE_SCREEN_BUFFER_INFO info;
-                GetConsoleScreenBufferInfo(GetStdHandle(StdHandle.STD_INPUT_HANDLE), out info);
+                GetConsoleScreenBufferInfo(GetStdHandle(StdHandle.STD_INPUT_HANDLE), out var info);
                 return (info.dwCursorPosition.X, info.dwCursorPosition.Y);
             }
         }

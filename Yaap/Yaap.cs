@@ -31,6 +31,7 @@ namespace Yaap
             new ThreadLocal<Stack<Yaap>>(() => new Stack<Yaap>());
 
         static readonly object _globalLock = new object();
+        static internal readonly object ConsoleLock = new object();
         static readonly IYaapBackend _backEnd;
 
         static YaapRegistry()
@@ -44,7 +45,7 @@ namespace Yaap
 
         static IYaapBackend SelectBackend()
         {
-            if (IsConsoleRedirected())
+            if (Console.IsOutputRedirected)
                 return new NullBackend();
             // Win32 is tricky, since we might be >= Windows 10, past the
             // enlightenment period in MSFT, in which case we want to use
@@ -65,23 +66,6 @@ namespace Yaap
                     return new NullBackend();
             }
         }
-
-        static bool IsConsoleRedirected()
-        {
-            switch (Environment.OSVersion.Platform) {
-                case PlatformID.Win32NT:
-                    return Win32Console.IsConsoleRedirected();
-
-                case PlatformID.MacOSX:
-                case PlatformID.Unix:
-                    return IsConsoleRefirectedOnPosix();
-                default:
-                    return false;
-            }
-        }
-
-        static bool IsConsoleRefirectedOnPosix() =>
-            !Mono.Unix.Native.Syscall.isatty(1);
 
         static bool IsRunning
         {
@@ -208,12 +192,12 @@ namespace Yaap
 
         static void OnCancelKeyPress(object sender, ConsoleCancelEventArgs e)
         {
-            lock (_consoleLock) {
+            lock (ConsoleLock) {
                 Console.Write("\r");
                 Console.Write(ANSICodes.EraseEntireLine);
-                if (_wasCursorHidden) {
-                    Console.CursorVisible = true;
-                }
+                //if (_wasCursorHidden) {
+                //    Console.CursorVisible = true;
+                //}
                 ANSICodes.SetScrollableRegion(0, Console.BufferHeight+1);
             }
         }
@@ -238,24 +222,32 @@ namespace Yaap
             Console.Write(ANSICodes.ClearScreen);
         }
 
-        internal static void Write(string s) { lock (_consoleLock) { Console.Write(s); } }
+        internal static void Write(string s) { lock (ConsoleLock) { Console.Write(s); } }
 
         internal static void WriteLine(string s) {
-            lock (_consoleLock) {
+            lock (ConsoleLock) {
+                var previousLine = _maxYaapPosition > 0 ? Console.CursorTop : 0;
+
                 Console.WriteLine(s);
-                if (_maxYaapPosition > 0)
-                    _totalLinesAddedAfterYaaps++;
+                if (_maxYaapPosition > 0) {
+                    var currentLine = Console.CursorTop;
+                    _totalLinesAddedAfterYaaps += currentLine - previousLine;
+                }
             } }
 
         internal static void WriteLine()
         {
-            lock (_consoleLock) {
+            lock (ConsoleLock) {
                 Console.WriteLine();
                 if (_maxYaapPosition > 0)
                     _totalLinesAddedAfterYaaps++;
             }
         }
 
+        public static int GetLineForYaap(Yaap yaap)
+        {
+            return Math.Max(0, y - (_maxYaapPosition - yaap.Position + _totalLinesAddedAfterYaaps));
+        }
     }
 
     /// <inheritdoc />

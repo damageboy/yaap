@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Text.Formatting;
 using System.Threading;
 
+using static Yaap.YaapRegistry;
+
 namespace Yaap.Backends {
     internal class WindowsConsoleBackend : IYaapBackend
     {
-        readonly object _consoleLock = new object();
         bool _wasCursorHidden;
         readonly StringBuffer _buffer = new StringBuffer(Console.WindowWidth * 10);
         char[] _chars = new char[Console.WindowWidth * 10];
@@ -22,7 +23,7 @@ namespace Yaap.Backends {
                     }
 
                     if (!lockWasTaken)
-                        Monitor.Enter(_consoleLock, ref lockWasTaken);
+                        Monitor.Enter(ConsoleLock, ref lockWasTaken);
 
                     if (!_wasCursorHidden) {
                         Console.CursorVisible = false;
@@ -40,16 +41,16 @@ namespace Yaap.Backends {
 
                 if (lockWasTaken) {
                     lockWasTaken = false;
-                    Monitor.Exit(_consoleLock);
+                    Monitor.Exit(ConsoleLock);
                 }
 
             }
             finally {
                 if (lockWasTaken)
-                    Monitor.Exit(_consoleLock);
+                    Monitor.Exit(ConsoleLock);
             }        }
 
-        public bool UpdateSingleYaap(Yaap yaap)
+        public void UpdateSingleYaap(Yaap yaap)
         {
             _buffer.Clear();
             var (x, y) = MoveTo(yaap);
@@ -58,12 +59,11 @@ namespace Yaap.Backends {
             yaap.Repaint(_buffer);
             SpillBuffer();
             MoveTo(x, y);
-
         }
 
         public void ClearSingleYaap(Yaap yaap)
         {
-            lock (_consoleLock) {
+            lock (ConsoleLock) {
                 var (x, y) = MoveTo(yaap);
                 yaap.Repaint(_buffer);
                 // Looks silly eh?
@@ -75,7 +75,6 @@ namespace Yaap.Backends {
                 MoveTo(x, y);
             }
         }
-
 
         void SpillBuffer()
         {
@@ -92,7 +91,7 @@ namespace Yaap.Backends {
             var (x, y) = Win32Console.CursorPosition;
             switch (yaap.Settings.Positioning) {
                 case YaapPositioning.FlowAndSnapToTop:
-                    Console.CursorTop = Math.Max(0, y - (_maxYaapPosition - yaap.Position + _totalLinesAddedAfterYaaps));
+                    Console.CursorTop = YaapRegistry.GetLineForYaap(yaap);
                     break;
                 case YaapPositioning.ClearAndAlignToTop:
                 case YaapPositioning.FixToBottom:
