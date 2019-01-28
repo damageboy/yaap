@@ -49,8 +49,8 @@ namespace Yaap
                 return new NullBackend();
             // Win32 is tricky, since we might be >= Windows 10, past the
             // enlightenment period in MSFT, in which case we want to use
-            // VT100, as if this is a real OS.
-            // Altenatively, if we are stuck in the dark ages we use crappy win32
+            // VT100, just like in a real OS.
+            // Alternatively, if we are stuck in the dark ages we use crappy win32
             switch (Environment.OSVersion.Platform) {
                 case PlatformID.Win32NT when !Win32Console.EnableVT100Stuffs():
                     return new WindowsConsoleBackend();
@@ -222,18 +222,22 @@ namespace Yaap
             Console.Write(ANSICodes.ClearScreen);
         }
 
-        internal static void Write(string s) { lock (ConsoleLock) { Console.Write(s); } }
-
-        internal static void WriteLine(string s) {
-            lock (ConsoleLock) {
-                var previousLine = _maxYaapPosition > 0 ? Console.CursorTop : 0;
-
+        internal static void Write(string s)
+        {
+            lock (_consoleLock) {
+                Console.Write(s);
+            }
+        }
+        internal static void WriteLine(string s)
+        {
+            lock (_consoleLock) {
                 Console.WriteLine(s);
                 if (_maxYaapPosition > 0) {
                     var currentLine = Console.CursorTop;
                     _totalLinesAddedAfterYaaps += currentLine - previousLine;
                 }
-            } }
+            }
+       	}
 
         internal static void WriteLine()
         {
