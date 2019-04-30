@@ -545,6 +545,19 @@ references:
   commentId: T:Yaap.YaapConsole
   fullName: Yaap.YaapConsole
   nameWithType: YaapConsole
+- uid: Yaap.YaapConsole.ClearScreen
+  name: ClearScreen()
+  href: api/Yaap.YaapConsole.html#Yaap_YaapConsole_ClearScreen
+  commentId: M:Yaap.YaapConsole.ClearScreen
+  fullName: Yaap.YaapConsole.ClearScreen()
+  nameWithType: YaapConsole.ClearScreen()
+- uid: Yaap.YaapConsole.ClearScreen*
+  name: ClearScreen
+  href: api/Yaap.YaapConsole.html#Yaap_YaapConsole_ClearScreen_
+  commentId: Overload:Yaap.YaapConsole.ClearScreen
+  isSpec: "True"
+  fullName: Yaap.YaapConsole.ClearScreen
+  nameWithType: YaapConsole.ClearScreen
 - uid: Yaap.YaapConsole.Write(System.String)
   name: Write(String)
   href: api/Yaap.YaapConsole.html#Yaap_YaapConsole_Write_System_String_
@@ -710,6 +723,30 @@ references:
   fullName.vb: Yaap.YaapEnumerableExtensions.Yaap(Of T)(System.Collections.Generic.IEnumerable(Of T), System.Int64, System.Int64, Yaap.YaapSettings)
   nameWithType: YaapEnumerableExtensions.Yaap<T>(IEnumerable<T>, Int64, Int64, YaapSettings)
   nameWithType.vb: YaapEnumerableExtensions.Yaap(Of T)(IEnumerable(Of T), Int64, Int64, YaapSettings)
+- uid: Yaap.YaapPositioning
+  name: YaapPositioning
+  href: api/Yaap.YaapPositioning.html
+  commentId: T:Yaap.YaapPositioning
+  fullName: Yaap.YaapPositioning
+  nameWithType: YaapPositioning
+- uid: Yaap.YaapPositioning.ClearAndAlignToTop
+  name: ClearAndAlignToTop
+  href: api/Yaap.YaapPositioning.html#Yaap_YaapPositioning_ClearAndAlignToTop
+  commentId: F:Yaap.YaapPositioning.ClearAndAlignToTop
+  fullName: Yaap.YaapPositioning.ClearAndAlignToTop
+  nameWithType: YaapPositioning.ClearAndAlignToTop
+- uid: Yaap.YaapPositioning.FixToBottom
+  name: FixToBottom
+  href: api/Yaap.YaapPositioning.html#Yaap_YaapPositioning_FixToBottom
+  commentId: F:Yaap.YaapPositioning.FixToBottom
+  fullName: Yaap.YaapPositioning.FixToBottom
+  nameWithType: YaapPositioning.FixToBottom
+- uid: Yaap.YaapPositioning.FlowAndSnapToTop
+  name: FlowAndSnapToTop
+  href: api/Yaap.YaapPositioning.html#Yaap_YaapPositioning_FlowAndSnapToTop
+  commentId: F:Yaap.YaapPositioning.FlowAndSnapToTop
+  fullName: Yaap.YaapPositioning.FlowAndSnapToTop
+  nameWithType: YaapPositioning.FlowAndSnapToTop
 - uid: Yaap.YaapSettings
   name: YaapSettings
   href: api/Yaap.YaapSettings.html
@@ -742,6 +779,19 @@ references:
   isSpec: "True"
   fullName: Yaap.YaapSettings.Description
   nameWithType: YaapSettings.Description
+- uid: Yaap.YaapSettings.DisableCursorDuringUpdates
+  name: DisableCursorDuringUpdates
+  href: api/Yaap.YaapSettings.html#Yaap_YaapSettings_DisableCursorDuringUpdates
+  commentId: P:Yaap.YaapSettings.DisableCursorDuringUpdates
+  fullName: Yaap.YaapSettings.DisableCursorDuringUpdates
+  nameWithType: YaapSettings.DisableCursorDuringUpdates
+- uid: Yaap.YaapSettings.DisableCursorDuringUpdates*
+  name: DisableCursorDuringUpdates
+  href: api/Yaap.YaapSettings.html#Yaap_YaapSettings_DisableCursorDuringUpdates_
+  commentId: Overload:Yaap.YaapSettings.DisableCursorDuringUpdates
+  isSpec: "True"
+  fullName: Yaap.YaapSettings.DisableCursorDuringUpdates
+  nameWithType: YaapSettings.DisableCursorDuringUpdates
 - uid: Yaap.YaapSettings.Elements
   name: Elements
   href: api/Yaap.YaapSettings.html#Yaap_YaapSettings_Elements
@@ -768,6 +818,32 @@ references:
   isSpec: "True"
   fullName: Yaap.YaapSettings.Leave
   nameWithType: YaapSettings.Leave
+- uid: Yaap.YaapSettings.MetricAbbreviations
+  name: MetricAbbreviations
+  href: api/Yaap.YaapSettings.html#Yaap_YaapSettings_MetricAbbreviations
+  commentId: P:Yaap.YaapSettings.MetricAbbreviations
+  fullName: Yaap.YaapSettings.MetricAbbreviations
+  nameWithType: YaapSettings.MetricAbbreviations
+- uid: Yaap.YaapSettings.MetricAbbreviations*
+  name: MetricAbbreviations
+  href: api/Yaap.YaapSettings.html#Yaap_YaapSettings_MetricAbbreviations_
+  commentId: Overload:Yaap.YaapSettings.MetricAbbreviations
+  isSpec: "True"
+  fullName: Yaap.YaapSettings.MetricAbbreviations
+  nameWithType: YaapSettings.MetricAbbreviations
+- uid: Yaap.YaapSettings.Positioning
+  name: Positioning
+  href: api/Yaap.YaapSettings.html#Yaap_YaapSettings_Positioning
+  commentId: P:Yaap.YaapSettings.Positioning
+  fullName: Yaap.YaapSettings.Positioning
+  nameWithType: YaapSettings.Positioning
+- uid: Yaap.YaapSettings.Positioning*
+  name: Positioning
+  href: api/Yaap.YaapSettings.html#Yaap_YaapSettings_Positioning_
+  commentId: Overload:Yaap.YaapSettings.Positioning
+  isSpec: "True"
+  fullName: Yaap.YaapSettings.Positioning
+  nameWithType: YaapSettings.Positioning
 - uid: Yaap.YaapSettings.SmoothingFactor
   name: SmoothingFactor
   href: api/Yaap.YaapSettings.html#Yaap_YaapSettings_SmoothingFactor
@@ -833,19 +909,6 @@ references:
   isSpec: "True"
   fullName: Yaap.YaapSettings.UseASCII
   nameWithType: YaapSettings.UseASCII
-- uid: Yaap.YaapSettings.UseMetricAbbreviations
-  name: UseMetricAbbreviations
-  href: api/Yaap.YaapSettings.html#Yaap_YaapSettings_UseMetricAbbreviations
-  commentId: P:Yaap.YaapSettings.UseMetricAbbreviations
-  fullName: Yaap.YaapSettings.UseMetricAbbreviations
-  nameWithType: YaapSettings.UseMetricAbbreviations
-- uid: Yaap.YaapSettings.UseMetricAbbreviations*
-  name: UseMetricAbbreviations
-  href: api/Yaap.YaapSettings.html#Yaap_YaapSettings_UseMetricAbbreviations_
-  commentId: Overload:Yaap.YaapSettings.UseMetricAbbreviations
-  isSpec: "True"
-  fullName: Yaap.YaapSettings.UseMetricAbbreviations
-  nameWithType: YaapSettings.UseMetricAbbreviations
 - uid: Yaap.YaapSettings.VerticalPosition
   name: VerticalPosition
   href: api/Yaap.YaapSettings.html#Yaap_YaapSettings_VerticalPosition

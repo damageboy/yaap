@@ -14,10 +14,10 @@
     <link rel="canonical" href="https://yaap.houmus.org/">
     <meta name="HandheldFriendly" content="True">
     <meta name="MobileOptimized" content="320">
-    <title>Enum YaapState
+    <title>Enum YaapPositioning
    | Yaap </title>
     <meta name="viewport" content="width=device-width">
-    <meta name="title" content="Enum YaapState
+    <meta name="title" content="Enum YaapPositioning
    | Yaap ">
     <meta name="generator" content="docfx 2.42.1.0">
     
@@ -89,20 +89,19 @@
         </div>
         <div class="article row grid-right">
           <div class="col-md-10">
-            <article class="content wrap" id="_content" data-uid="Yaap.YaapState">
+            <article class="content wrap" id="_content" data-uid="Yaap.YaapPositioning">
   
   
-  <h1 id="Yaap_YaapState" data-uid="Yaap.YaapState" class="text-break">Enum YaapState
+  <h1 id="Yaap_YaapPositioning" data-uid="Yaap.YaapPositioning" class="text-break">Enum YaapPositioning
   </h1>
-  <div class="markdown level0 summary"><p>The current state of the <a class="xref" href="Yaap.Yaap.html">Yaap</a> instance</p>
+  <div class="markdown level0 summary"><p>An enumeration representing the different positioning/alignment options for a Yaap progress bar(s)</p>
 </div>
   <div class="markdown level0 conceptual"></div>
   <h6><strong>Namespace</strong>: <a class="xref" href="Yaap.html">Yaap</a></h6>
   <h6><strong>Assembly</strong>: Yaap.dll</h6>
-  <h5 id="Yaap_YaapState_syntax">Syntax</h5>
+  <h5 id="Yaap_YaapPositioning_syntax">Syntax</h5>
   <div class="codewrapper">
-    <pre><code class="lang-csharp hljs">[PublicAPI]
-public enum YaapState</code></pre>
+    <pre><code class="lang-csharp hljs">public enum YaapPositioning</code></pre>
   </div>
   <h3 id="fields">Fields
   </h3>
@@ -115,18 +114,22 @@ public enum YaapState</code></pre>
     <thead>
     <tbody>
       <tr>
-        <td id="Yaap_YaapState_Paused">Paused</td>
-        <td><p>The yaap instance is paused</p>
+        <td id="Yaap_YaapPositioning_ClearAndAlignToTop">ClearAndAlignToTop</td>
+        <td><p>Immediately clear the terminal once the Yaap is displayed, and display the Yaap(s) at the top of the terminal
+while the text scrolls below the Yaap(s)</p>
 </td>
       </tr>
       <tr>
-        <td id="Yaap_YaapState_Running">Running</td>
-        <td><p>The yaap instance is running (progressing)</p>
+        <td id="Yaap_YaapPositioning_FixToBottom">FixToBottom</td>
+        <td><p>Immediately display the Yaap at the bottom of the terminal and allow the text to scroll in the region above
+the Yaap. Note that this might look funky when multiple Yaaps are used dynamically without pre-specifying their
+vertical position in advance...</p>
 </td>
       </tr>
       <tr>
-        <td id="Yaap_YaapState_Stalled">Stalled</td>
-        <td><p>The yaap instance is stalled</p>
+        <td id="Yaap_YaapPositioning_FlowAndSnapToTop">FlowAndSnapToTop</td>
+        <td><p>Start displaying the Yaap at the current screen position, but snap it to the
+top of the terminal when it eventually scrolls over there</p>
 </td>
       </tr>
     </tbody>
@@ -139,10 +142,10 @@ public enum YaapState</code></pre>
               <div class="contribution">
                 <ul class="nav">
                   <li>
-                    <a href="https://github.com/org/damageboy/yaap/new/dev/docs-ref-overwrite/new?filename=Yaap_YaapState.md&amp;value=---%0Auid%3A%20Yaap.YaapState%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A" class="contribution-link">Improve this Doc</a>
+                    <a href="https://github.com/org/damageboy/yaap/new/dev/docs-ref-overwrite/new?filename=Yaap_YaapPositioning.md&amp;value=---%0Auid%3A%20Yaap.YaapPositioning%0Asummary%3A%20'*You%20can%20override%20summary%20for%20the%20API%20here%20using%20*MARKDOWN*%20syntax'%0A---%0A%0A*Please%20type%20below%20more%20information%20about%20this%20API%3A*%0A%0A" class="contribution-link">Improve this Doc</a>
                   </li>
                   <li>
-                    <a href="https://github.com/damageboy/yaap/blob/dev/Yaap/YaapSettings.cs/#L10" class="contribution-link">View Source</a>
+                    <a href="https://github.com/damageboy/yaap/blob/dev/Yaap/YaapSettings.cs/#L67" class="contribution-link">View Source</a>
                   </li>
                 </ul>
               </div>

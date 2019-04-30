@@ -347,6 +347,14 @@ $(function () {
     } else {
       $('#navbar ul a.active').parents('li').addClass(active);
       renderBreadcrumb();
+      showSearch();
+    }
+    
+    function showSearch() {
+      if ($('#search-results').length !== 0) {
+          $('#search').show();
+          $('body').trigger("searchEvent");
+      }
     }
 
     function loadNavbar() {
@@ -359,10 +367,7 @@ $(function () {
       if (tocPath) tocPath = tocPath.replace(/\\/g, '/');
       $.get(navbarPath, function (data) {
         $(data).find("#toc>ul").appendTo("#navbar");
-        if ($('#search-results').length !== 0) {
-          $('#search').show();
-          $('body').trigger("searchEvent");
-        }
+        showSearch();
         var index = navbarPath.lastIndexOf('/');
         var navrel = '';
         if (index > -1) {
@@ -377,7 +382,6 @@ $(function () {
             href = navrel + href;
             $(e).attr("href", href);
 
-            // TODO: currently only support one level navbar
             var isActive = false;
             var originalHref = e.name;
             if (originalHref) {
