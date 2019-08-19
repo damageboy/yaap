@@ -17,5 +17,17 @@ namespace Yaap.Backends
         public void ClearSingleYaap(Yaap yaap)
         {
         }
+
+        public void Write(string s)
+        {
+        }
+
+        public void WriteLine(string s)
+        {
+        }
+
+        public void WriteLine()
+        {
+        }
     }
 }

@@ -117,7 +117,7 @@ foreach (var t in threads) t.Start();
 
 ## What is a Yaap made of
 
-![](/home/dans/projects/public/yaap.git/docs/images/progressbar.png)
+![](images/progressbar.png)
 
 ## What Else
 

@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable disable
+using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -24,8 +25,8 @@ namespace Yaap
 
         static readonly object _threadLock = new object();
         static readonly IDictionary<int, Yaap> _instances = new ConcurrentDictionary<int, Yaap>();
-        static int _maxYaapPosition;
-        static int _totalLinesAddedAfterYaaps;
+        internal static int MaxYaapPosition;
+        internal static int TotalLinesAddedAfterYaaps;
         static int _isRunning;
 
         internal static ThreadLocal<Stack<Yaap>> YaapStack =
@@ -130,10 +131,10 @@ namespace Yaap
                     IsRunning = false;
                     Console.CancelKeyPress -= OnCancelKeyPress;
 
-                    if (yaap.Position + 1 == _maxYaapPosition)
-                        _maxYaapPosition = _instances.Count == 0 ? 0 : (_instances.Keys.Max() + 1);
+                    if (yaap.Position + 1 == MaxYaapPosition)
+                        MaxYaapPosition = _instances.Count == 0 ? 0 : (_instances.Keys.Max() + 1);
 
-                    _totalLinesAddedAfterYaaps = 0;
+                    TotalLinesAddedAfterYaaps = 0;
                 }
                 _monitorThread.Join();
             }
@@ -167,14 +168,14 @@ namespace Yaap
                     yaap.Position = ++lastPos;
                 }
 
-                if (_maxYaapPosition > yaap.Position)
+                if (MaxYaapPosition > yaap.Position)
                     return yaap.Position;
 
                 // This progress bar is taking up one more line
                 // than we previously accounted for, so bump the total line count + \n
-                for (var l = _maxYaapPosition; l < yaap.Position + 1; l++)
+                for (var l = MaxYaapPosition; l < yaap.Position + 1; l++)
                     Console.WriteLine();
-                _maxYaapPosition = yaap.Position + 1;
+                MaxYaapPosition = yaap.Position + 1;
                 return yaap.Position;
             }
 
@@ -223,36 +224,11 @@ namespace Yaap
             Console.Write(ANSICodes.ClearScreen);
         }
 
-        internal static void Write(string s)
-        {
-            lock (_consoleLock) {
-                Console.Write(s);
-            }
-        }
-        internal static void WriteLine(string s)
-        {
-            lock (_consoleLock) {
-                Console.WriteLine(s);
-                if (_maxYaapPosition > 0) {
-                    var currentLine = Console.CursorTop;
-                    _totalLinesAddedAfterYaaps += currentLine - previousLine;
-                }
-            }
-       	}
+        internal static void Write(string s) => _backEnd.Write(s);
 
-        internal static void WriteLine()
-        {
-            lock (ConsoleLock) {
-                Console.WriteLine();
-                if (_maxYaapPosition > 0)
-                    _totalLinesAddedAfterYaaps++;
-            }
-        }
+        internal static void WriteLine(string s) => _backEnd.WriteLine(s);
 
-        public static int GetLineForYaap(Yaap yaap)
-        {
-            return Math.Max(0, y - (_maxYaapPosition - yaap.Position + _totalLinesAddedAfterYaaps));
-        }
+        internal static void WriteLine() => _backEnd.WriteLine();
     }
 
     /// <inheritdoc />

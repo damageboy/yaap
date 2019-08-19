@@ -1,3 +1,4 @@
+#nullable disable
 using System;
 using System.Collections.Generic;
 using System.Text.Formatting;
@@ -76,6 +77,34 @@ namespace Yaap.Backends {
             }
         }
 
+        public void Write(string s)
+        {
+            lock (ConsoleLock) {
+                Console.Write(s);
+            }
+        }
+        public void WriteLine(string s)
+        {
+            lock (ConsoleLock) {
+                var previousLine = Console.CursorTop;
+                Console.WriteLine(s);
+                if (MaxYaapPosition > 0) {
+                    var currentLine = Console.CursorTop;
+                    TotalLinesAddedAfterYaaps += currentLine - previousLine;
+                }
+            }
+        }
+
+        public void WriteLine()
+        {
+            lock (ConsoleLock) {
+                Console.WriteLine();
+                if (MaxYaapPosition > 0)
+                    TotalLinesAddedAfterYaaps++;
+            }
+        }
+
+
         void SpillBuffer()
         {
             if (_buffer.Count > _chars.Length)
@@ -91,7 +120,7 @@ namespace Yaap.Backends {
             var (x, y) = Win32Console.CursorPosition;
             switch (yaap.Settings.Positioning) {
                 case YaapPositioning.FlowAndSnapToTop:
-                    Console.CursorTop = YaapRegistry.GetLineForYaap(yaap);
+                    Console.CursorTop = Math.Max(0, y - (MaxYaapPosition - yaap.Position + TotalLinesAddedAfterYaaps));
                     break;
                 case YaapPositioning.ClearAndAlignToTop:
                 case YaapPositioning.FixToBottom:

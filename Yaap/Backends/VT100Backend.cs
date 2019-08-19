@@ -58,6 +58,21 @@ namespace Yaap.Backends {
             SpillBuffer();
         }
 
+        public void Write(string s)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void WriteLine(string s)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void WriteLine()
+        {
+            throw new NotImplementedException();
+        }
+
         public void Dispose()
         {
             throw new NotImplementedException();

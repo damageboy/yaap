@@ -8,5 +8,10 @@ namespace Yaap.Backends
         void UpdateAllYaaps(ICollection<Yaap> instances);
         void UpdateSingleYaap(Yaap yaap);
         void ClearSingleYaap(Yaap yaap);
+
+        void Write(string s);
+        void WriteLine(string s);
+        void WriteLine();
+
     }
 }
