@@ -2,10 +2,10 @@ using System;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace Yaap.Backends
+namespace Yaap.Utils
 {
     /// <summary>
-    /// All of the pivoke stuff below is shamelssly stolen from https://github.com/AArnott/pinvoke
+    /// All of the pinvoke stuff below is shamelessly stolen from https://github.com/AArnott/pinvoke
     /// The reason for this IP theft is that the netstandard nuget packages for netstandard DO NOT include
     /// any of the console stuff in to weird decision I don't care to understand
     /// </summary>
