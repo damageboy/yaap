@@ -1,7 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <Version>0.6.6</Version>
     <Authors>Dan Shechter</Authors>
     <Company>Yaap</Company>
     <Description>Yaap - Yet Another ANSI Progress Bar</Description>
@@ -9,7 +8,7 @@
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>git@github.com:damageboy/yaap.git</RepositoryUrl>
     <PackageProjectUrl>https://github.com/damageboy/yaap</PackageProjectUrl>
-    <PackageLicenseUrl>https://raw.githubusercontent.com/damageboy/yaap/master/LICENSE</PackageLicenseUrl>
+    <PackageLicense>https://raw.githubusercontent.com/damageboy/yaap/master/LICENSE</PackageLicense>
     <Copyright>Copyright 2018 © Dan Shechter</Copyright>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>

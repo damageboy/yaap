@@ -1,0 +1,24 @@
+name: Build dev and deploy to local packge registry
+on:
+  push:
+    branches:
+      - dev
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@master
+    - uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 3.0.100-preview9-014004
+    - name: build
+      run: dotnet build
+    - name: test
+      run: dotnet test
+    - name: pack
+      run: dotnet pack -c release Yaap/Yaap.csproj -o nupkg/
+    - name: Avert your eyes!
+      run: cat .github/workflows/nuget.config | sed -e "s#YES_THIS_SUCKS_BALLS#${{ secrets.GITHUB_TOKEN }}#" > nuget.config
+    - name: push to package registry
+      run: dotnet nuget push -s GitHub nupkg/*.nupkg

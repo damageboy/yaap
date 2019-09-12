@@ -8,5 +8,13 @@
     <TargetLatestRuntimePatch>true</TargetLatestRuntimePatch>
     <BaseIntermediateOutputPath>$(MSBuildThisFileDirectory).obj\$(MSBuildProjectName)\</BaseIntermediateOutputPath>
     <BaseOutputPath>$(MSBuildThisFileDirectory)build\\$(MSBuildProjectName)\</BaseOutputPath>
+    <NoWarn>NU5131</NoWarn>
+
   </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Nerdbank.GitVersioning">
+      <Version>3.0.25</Version>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
 </Project>
